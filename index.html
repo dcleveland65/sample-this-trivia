@@ -43,8 +43,6 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .btn-start:hover{filter:brightness(1.1)}
 .share-section{background:rgba(0,245,212,.05);border:1px solid rgba(0,245,212,.2);border-radius:12px;padding:1.25rem;margin-top:1rem}
 .share-section h3{font-size:1rem;color:var(--neon);margin-bottom:.75rem}
-.btn-download{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.6rem 1rem;font-weight:700;font-size:.9rem;cursor:pointer;transition:border-color .15s;text-decoration:none;width:100%}
-.btn-download:hover{border-color:var(--neon)}
 .share-note{font-size:.78rem;color:#555;margin-top:.5rem;line-height:1.5}
 
 /* TEAM COLOR BADGES */
@@ -310,9 +308,12 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
     </div>
 
     <div class="share-section">
-      <h3>📥 Share the Game</h3>
-      <button class="btn-download" onclick="downloadGame()">⬇ Download Game File</button>
-      <p class="share-note">Send the HTML file to anyone — opens in any browser, works offline except for music previews.</p>
+      <h3>🔗 Share the Game</h3>
+      <div style="display:flex;align-items:center;gap:.5rem;background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem">
+        <span style="flex:1;font-size:.88rem;color:var(--neon);letter-spacing:.5px">sample-this-trivia-game.netlify.app</span>
+        <button onclick="navigator.clipboard.writeText('https://sample-this-trivia-game.netlify.app').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})" style="background:var(--border);border:none;color:#fff;border-radius:6px;padding:.35rem .75rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">Copy</button>
+      </div>
+      <p class="share-note">Send this link — players open it on any device, no download needed.</p>
     </div>
   </div>
 </div>
@@ -1888,12 +1889,10 @@ function tbNext() {
 }
 
 // ════════════════════════════════════════
-// DOWNLOAD & SHARE
+// SHARE
 // ════════════════════════════════════════
-function downloadGame() {
-  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([html],{type:'text/html'})),download:'sample-this-trivia.html'});
-  a.click();
+function downloadGame() { // kept as stub — not exposed in UI
+  void 0;
 }
 
 // ════════════════════════════════════════
