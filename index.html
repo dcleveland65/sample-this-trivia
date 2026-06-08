@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sample This! — 70s &amp; 80s Music Trivia</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--retro:#ff6b35;--neon:#00f5d4;--pink:#f72585;--gold:#ffd60a;--dark:#0d0d1a;--card:#1a1a2e;--border:#2a2a4a}
@@ -290,6 +292,23 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
     <label class="speed-toggle"><input type="checkbox" id="s-speed"> <span>⚡ Speed Round Mode — 15 sec timer, double points on all questions</span></label>
     <button class="btn-start" onclick="startGame()">🎵 Let's Play!</button>
 
+    <!-- Live Online Room -->
+    <div id="online-section" style="background:rgba(0,245,212,.07);border:1px solid rgba(0,245,212,.3);border-radius:12px;padding:1.25rem;margin-top:1rem">
+      <h3 style="color:var(--neon);font-size:1rem;margin-bottom:.5rem">🌐 Live Online Room</h3>
+      <p style="font-size:.82rem;color:#aaa;margin-bottom:.85rem">Create a room — share the 5-letter code — every device sees scores update in real time.</p>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center" id="join-row">
+        <button onclick="createOnlineRoom()" style="background:var(--neon);color:#000;border:none;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;font-size:.9rem">+ Create Room</button>
+        <input id="join-code-in" maxlength="5" placeholder="Room code…" style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:110px;text-transform:uppercase;letter-spacing:3px">
+        <button onclick="joinOnlineRoom()" style="background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.55rem 1rem;font-weight:700;cursor:pointer;font-size:.9rem">Join →</button>
+      </div>
+      <div id="room-created-msg" style="display:none;margin-top:.85rem">
+        <span style="color:#aaa;font-size:.82rem">Share this code:</span>
+        <strong style="color:var(--gold);font-size:1.6rem;letter-spacing:6px;display:block;margin-top:.25rem" id="room-code-out"></strong>
+        <span style="color:#666;font-size:.78rem">Players open the game URL and enter this code to join</span>
+      </div>
+      <div id="room-joined-msg" style="display:none;margin-top:.75rem;font-size:.9rem;color:var(--neon)"></div>
+    </div>
+
     <div class="share-section">
       <h3>📥 Share the Game</h3>
       <button class="btn-download" onclick="downloadGame()">⬇ Download Game File</button>
@@ -301,7 +320,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 <!-- ══ GAME ══ -->
 <div id="game" class="screen">
   <div class="game-header">
-    <span class="game-logo">🎵 SAMPLE THIS!</span>
+    <span class="game-logo">🎵 SAMPLE THIS! <span id="live-badge" style="display:none;font-size:.6rem;background:var(--pink);color:#fff;border-radius:4px;padding:2px 6px;vertical-align:middle;letter-spacing:1px;transition:opacity .3s">LIVE</span></span>
     <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
       <span class="q-counter" id="q-counter">Q 1 of 18</span>
       <span style="font-size:.72rem;color:#555" id="q-remain">17 remaining</span>
@@ -1895,8 +1914,69 @@ function resetGame() { showScreen('setup'); }
   } catch(e){}
 })();
 
-// pushState is a no-op stub — Firebase multiplayer not yet configured
-function pushState() {}
+// ════════════════════════════════════════
+// FIREBASE — LIVE MULTIPLAYER
+// ════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey:            "AIzaSyAYezS37yDmvyqgiy2snmclguOgEMqUMKg",
+  authDomain:        "sample-this-trivia.firebaseapp.com",
+  databaseURL:       "https://sample-this-trivia-default-rtdb.firebaseio.com",
+  projectId:         "sample-this-trivia",
+  storageBucket:     "sample-this-trivia.firebasestorage.app",
+  messagingSenderId: "27891426606",
+  appId:             "1:27891426606:web:81594aa057262dee8e06bf"
+};
+
+firebase.initializeApp(FB_CONFIG);
+const DB = firebase.database();
+
+const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genCode(n=5){ return Array.from({length:n},()=>ROOM_CHARS[Math.floor(Math.random()*ROOM_CHARS.length)]).join(''); }
+let ROOM = null, IS_HOST = false;
+
+// Sync game state to all connected devices
+function pushState() {
+  if (!ROOM || !IS_HOST) return;
+  DB.ref(`rooms/${ROOM}/state`).set({
+    idx:       G.idx,
+    revealed:  G.revealed,
+    revealPts: G.revealPts || 0,
+    teams:     G.teams.map(t=>({name:t.name,score:t.score,color:t.color,streak:t.streak,correct:t.correct})),
+    ts:        Date.now()
+  });
+}
+
+// Guest devices subscribe and mirror the live scoreboard
+function subscribeGuest(code) {
+  DB.ref(`rooms/${code}/state`).on('value', snap => {
+    const s = snap.val();
+    if (!s || !G.teams) return;
+    s.teams.forEach((srv,i) => { if (G.teams[i]) G.teams[i].score = srv.score; });
+    renderSB();
+    const badge = document.getElementById('live-badge');
+    if (badge) { badge.style.display='inline-block'; badge.style.opacity='1'; setTimeout(()=>badge.style.opacity='.4',600); }
+  });
+}
+
+async function createOnlineRoom() {
+  const code = genCode();
+  ROOM = code; IS_HOST = true;
+  await DB.ref(`rooms/${code}`).set({ created: Date.now() });
+  document.getElementById('room-code-out').textContent = code;
+  document.getElementById('room-created-msg').style.display = 'block';
+  document.getElementById('join-row').style.display = 'none';
+}
+
+async function joinOnlineRoom() {
+  const code = (document.getElementById('join-code-in').value||'').trim().toUpperCase();
+  if (!code) return;
+  const snap = await DB.ref(`rooms/${code}`).once('value');
+  if (!snap.exists()) { alert(`Room "${code}" not found — check the code.`); return; }
+  ROOM = code; IS_HOST = false;
+  document.getElementById('room-joined-msg').textContent = `✅ Joined room ${code} — scores sync live!`;
+  document.getElementById('room-joined-msg').style.display = 'block';
+  subscribeGuest(code);
+}
 
 initSetup();
 </script>
