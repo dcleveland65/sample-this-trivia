@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sample This! — 70s &amp; 80s Music Trivia</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<!-- Firebase (optional — enables live multiplayer room codes) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--retro:#ff6b35;--neon:#00f5d4;--pink:#f72585;--gold:#ffd60a;--dark:#0d0d1a;--card:#1a1a2e;--border:#2a2a4a}
@@ -293,28 +290,6 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
     <label class="speed-toggle"><input type="checkbox" id="s-speed"> <span>⚡ Speed Round Mode — 15 sec timer, double points on all questions</span></label>
     <button class="btn-start" onclick="startGame()">🎵 Let's Play!</button>
 
-    <!-- Online Room (shown only when Firebase is configured) -->
-    <div id="online-section" style="display:none;background:rgba(0,245,212,.06);border:1px solid rgba(0,245,212,.25);border-radius:12px;padding:1.25rem;margin-top:1rem">
-      <h3 style="color:var(--neon);font-size:1rem;margin-bottom:.75rem">🌐 Live Online Room</h3>
-      <p style="font-size:.82rem;color:#888;margin-bottom:.75rem">Create a room and share the code — every device sees scores update in real time.</p>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center" id="join-row">
-        <button onclick="createOnlineRoom()" style="background:var(--neon);color:#000;border:none;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;font-size:.9rem">+ Create Room</button>
-        <input id="join-code-in" maxlength="5" placeholder="Room code…" style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:120px;text-transform:uppercase">
-        <button onclick="joinOnlineRoom()" style="background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.55rem 1rem;font-weight:700;cursor:pointer;font-size:.9rem">Join →</button>
-      </div>
-      <div id="room-created-msg" style="display:none;margin-top:.75rem;font-size:.95rem">
-        🏠 Room code: <strong style="color:var(--gold);font-size:1.3rem;letter-spacing:3px" id="room-code-out"></strong>
-        <span style="color:#888;font-size:.82rem;display:block;margin-top:.25rem">Share this code with other players so they can join from their own device.</span>
-      </div>
-      <div id="room-joined-msg" style="display:none;margin-top:.75rem;font-size:.88rem;color:var(--neon)"></div>
-    </div>
-
-    <!-- Not-configured: show instructions to enable Firebase -->
-    <div id="firebase-help" style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:1.25rem;margin-top:1rem">
-      <h3 style="color:var(--retro);font-size:1rem;margin-bottom:.5rem">🌐 Enable Live Multiplayer</h3>
-      <p style="font-size:.82rem;color:#888;line-height:1.55">Add a free Firebase config to unlock real-time room codes so teams on different devices see live scores. <button onclick="showDeployModal()" style="background:none;border:none;color:var(--neon);cursor:pointer;font-size:.82rem;text-decoration:underline;padding:0">How to set up →</button></p>
-    </div>
-
     <div class="share-section">
       <h3>📥 Share the Game</h3>
       <button class="btn-download" onclick="downloadGame()">⬇ Download Game File</button>
@@ -326,7 +301,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 <!-- ══ GAME ══ -->
 <div id="game" class="screen">
   <div class="game-header">
-    <span class="game-logo">🎵 SAMPLE THIS! <span id="live-badge" style="display:none;font-size:.6rem;background:var(--pink);color:#fff;border-radius:4px;padding:2px 6px;vertical-align:middle;letter-spacing:1px;transition:opacity .3s">LIVE</span></span>
+    <span class="game-logo">🎵 SAMPLE THIS!</span>
     <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
       <span class="q-counter" id="q-counter">Q 1 of 18</span>
       <span style="font-size:.72rem;color:#555" id="q-remain">17 remaining</span>
@@ -473,49 +448,6 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
     <div class="tb-nav">
       <button class="tb-next-btn" id="tb-next-btn" onclick="tbNext()" style="display:none">Next Round →</button>
       <button class="tb-done-btn" onclick="resetGame()">Done — New Game</button>
-    </div>
-  </div>
-</div>
-
-<!-- Deploy & Setup Modal -->
-<div id="deploy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;padding:1.5rem">
-  <div style="background:#1a1a2e;border:2px solid var(--neon);border-radius:20px;padding:2rem;max-width:600px;width:100%;position:relative;max-height:90vh;overflow-y:auto">
-    <button onclick="closeDeployModal()" style="position:absolute;top:1rem;right:1rem;background:var(--border);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem">✕</button>
-    <h2 style="color:var(--neon);margin-bottom:1.5rem">🚀 Save & Deploy Sample This!</h2>
-
-    <div style="background:rgba(0,245,212,.08);border:1px solid rgba(0,245,212,.2);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
-      <h3 style="color:var(--neon);font-size:1rem;margin-bottom:.75rem">⚡ Option 1 — Netlify Drop (30 seconds, free)</h3>
-      <ol style="color:#ccc;font-size:.9rem;line-height:2;padding-left:1.25rem">
-        <li>Click the <strong>⬇ Download Game File</strong> button on this screen</li>
-        <li>Go to <a href="https://app.netlify.com/drop" target="_blank" style="color:var(--neon)">app.netlify.com/drop</a></li>
-        <li>Drag the HTML file onto the page</li>
-        <li>Get a shareable link instantly (e.g. <em>cool-name-123.netlify.app</em>)</li>
-      </ol>
-      <p style="color:#888;font-size:.82rem;margin-top:.5rem">⚠️ This hosts the game — but scores are still local to whoever opens the link.</p>
-    </div>
-
-    <div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
-      <h3 style="color:var(--retro);font-size:1rem;margin-bottom:.75rem">🔥 Option 2 — Firebase (live multiplayer room codes)</h3>
-      <ol style="color:#ccc;font-size:.9rem;line-height:2;padding-left:1.25rem">
-        <li>Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--retro)">console.firebase.google.com</a> → Add project</li>
-        <li>In your project: click <strong>&lt;/&gt;</strong> (Web) → register app → copy the <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">firebaseConfig</code></li>
-        <li>In the sidebar: <strong>Build → Realtime Database → Create database</strong> → choose region → <strong>Start in test mode</strong></li>
-        <li>Open this HTML file in a text editor, find <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">const FB_CONFIG = {</code> and paste your values in</li>
-        <li>Save the file and reload — the <strong>🌐 Live Online Room</strong> section appears</li>
-        <li>Deploy to Netlify (option 1 above) so everyone can access the same hosted URL</li>
-      </ol>
-      <p style="color:#888;font-size:.82rem;margin-top:.5rem">With Firebase active: host creates a room → shares 5-letter code → guests join and see live score updates as points are awarded. Free tier supports hundreds of concurrent players.</p>
-    </div>
-
-    <div style="background:rgba(180,180,180,.06);border:1px solid #2a2a4a;border-radius:12px;padding:1.25rem">
-      <h3 style="color:#aaa;font-size:1rem;margin-bottom:.75rem">📁 Option 3 — GitHub Pages (free permanent URL)</h3>
-      <ol style="color:#ccc;font-size:.9rem;line-height:2;padding-left:1.25rem">
-        <li>Create a free account at <a href="https://github.com" target="_blank" style="color:#aaa">github.com</a></li>
-        <li>New repository → name it <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">sample-this-trivia</code> → Public</li>
-        <li>Upload the HTML file, rename it <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">index.html</code></li>
-        <li>Settings → Pages → Source: main branch → Save</li>
-        <li>Your game is live at <em>yourusername.github.io/sample-this-trivia</em></li>
-      </ol>
     </div>
   </div>
 </div>
@@ -1963,114 +1895,10 @@ function resetGame() { showScreen('setup'); }
   } catch(e){}
 })();
 
-// ════════════════════════════════════════════════════════
-// FIREBASE CONFIG
-// ── HOW TO ENABLE ONLINE MULTIPLAYER ──────────────────
-// 1. Go to  https://console.firebase.google.com
-// 2. Click "Add project" → give it any name → Continue
-// 3. On the project dashboard: click "</>" (Web app) → register app
-// 4. Copy the firebaseConfig object values into FB_CONFIG below
-// 5. In the Firebase console sidebar: Build → Realtime Database
-//    → Create database → choose any region → Start in test mode
-// 6. Save and reload this file — the Online Room section appears!
-//
-// ── HOW TO HOST THIS APP ONLINE (no account needed) ───
-// 1. Go to  https://app.netlify.com/drop
-// 2. Drag this HTML file onto the page
-// 3. You get a shareable link instantly (e.g. random-name.netlify.app)
-// ════════════════════════════════════════════════════════
-const FB_CONFIG = {
-  apiKey:            "",
-  authDomain:        "",
-  databaseURL:       "",   // e.g. https://YOUR-PROJECT-default-rtdb.firebaseio.com
-  projectId:         "",
-  storageBucket:     "",
-  messagingSenderId: "",
-  appId:             ""
-};
-
-// Initialise — silently no-ops if config is empty
-const DB = (() => {
-  if (!FB_CONFIG.apiKey) return null;
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
-    return firebase.database();
-  } catch(e) { console.warn('Firebase init failed:', e); return null; }
-})();
-
-// ── ROOM MANAGEMENT ──────────────────────────────────
-const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function genCode(n=5){ return Array.from({length:n},()=>ROOM_CHARS[Math.floor(Math.random()*ROOM_CHARS.length)]).join(''); }
-
-let ROOM = null;  // active room code
-let IS_HOST = false;
-
-// Push the full game state to Firebase (host calls this after every change)
-function pushState(extraFields={}) {
-  if (!DB || !ROOM || !IS_HOST) return;
-  DB.ref(`rooms/${ROOM}/state`).set({
-    idx:       G.idx,
-    revealed:  G.revealed,
-    revealPts: G.revealPts || 0,
-    teams:     G.teams.map(t=>({name:t.name,score:t.score,color:t.color,streak:t.streak,correct:t.correct})),
-    ts:        Date.now(),
-    ...extraFields
-  });
-}
-
-// Guest devices listen for state changes and update their scoreboard
-function subscribeGuest(code) {
-  if (!DB) return;
-  DB.ref(`rooms/${code}/state`).on('value', snap => {
-    const s = snap.val();
-    if (!s || !G.teams) return;
-    // Update scores on guest device
-    s.teams.forEach((srv, i) => {
-      if (G.teams[i]) G.teams[i].score = srv.score;
-    });
-    renderSB();
-    // Flash "LIVE" indicator
-    const badge = document.getElementById('live-badge');
-    if (badge) { badge.style.display='inline-block'; setTimeout(()=>{badge.style.opacity='.4';},600); badge.style.opacity='1'; }
-  });
-}
-
-async function createOnlineRoom() {
-  if (!DB) { showDeployModal(); return; }
-  const code = genCode();
-  ROOM = code; IS_HOST = true;
-  await DB.ref(`rooms/${code}`).set({ created: Date.now(), host: true });
-  document.getElementById('room-code-out').textContent = code;
-  document.getElementById('room-created-msg').style.display = 'block';
-  document.getElementById('join-row').style.display = 'none';
-}
-
-async function joinOnlineRoom() {
-  const code = (document.getElementById('join-code-in').value||'').trim().toUpperCase();
-  if (!code) return;
-  if (!DB) { alert('Firebase is not configured in this copy of the game.'); return; }
-  const snap = await DB.ref(`rooms/${code}`).once('value');
-  if (!snap.exists()) { alert(`Room "${code}" not found — check the code.`); return; }
-  ROOM = code; IS_HOST = false;
-  document.getElementById('room-joined-msg').textContent = `✅ Joined room ${code} — scores sync live!`;
-  document.getElementById('room-joined-msg').style.display = 'block';
-  subscribeGuest(code);
-}
-
-function showDeployModal() {
-  document.getElementById('deploy-modal').style.display = 'flex';
-}
-function closeDeployModal() {
-  document.getElementById('deploy-modal').style.display = 'none';
-}
+// pushState is a no-op stub — Firebase multiplayer not yet configured
+function pushState() {}
 
 initSetup();
-
-// Show/hide Firebase UI based on whether config was provided
-if (DB) {
-  document.getElementById('online-section').style.display = 'block';
-  document.getElementById('firebase-help').style.display  = 'none';
-}
 </script>
 </body>
 </html>
