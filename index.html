@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sample This! — 70s &amp; 80s Music Trivia</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Firebase (optional — enables live multiplayer room codes) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--retro:#ff6b35;--neon:#00f5d4;--pink:#f72585;--gold:#ffd60a;--dark:#0d0d1a;--card:#1a1a2e;--border:#2a2a4a}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark) center/cover fixed no-repeat;color:#fff;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-index:0;pointer-events:none}
+.screen{display:none;min-height:100vh;position:relative;z-index:1}
+.screen.active{display:flex;flex-direction:column}
+.overlay{z-index:200}
+
+/* ── SETUP ── */
+#setup{align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at top,rgba(26,10,46,.55),rgba(13,13,26,.45) 60%)}
+.logo{text-align:center;margin-bottom:2rem}
+.logo h1{font-size:clamp(2.5rem,8vw,5.5rem);font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#ff6b35 0%,#f72585 50%,#00f5d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.logo .sub{color:#777;font-size:.95rem;margin-top:.4rem;letter-spacing:5px;text-transform:uppercase}
+.setup-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:600px}
+.setup-card h2{font-size:1.3rem;margin-bottom:1.25rem;color:var(--neon)}
+.team-inputs{display:flex;flex-direction:column;gap:.65rem}
+.team-row{display:flex;align-items:center;gap:.65rem}
+.team-badge{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0}
+.team-row input{flex:1;background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;transition:border-color .2s}
+.team-row input:focus{border-color:var(--neon)}
+.rm-btn{background:transparent;border:none;color:#555;cursor:pointer;font-size:1.1rem;padding:0 .2rem;transition:color .15s}
+.rm-btn:hover{color:var(--pink)}
+.add-team-btn{background:transparent;border:1px dashed var(--border);border-radius:8px;color:#555;padding:.55rem;width:100%;cursor:pointer;margin-top:.4rem;transition:all .15s}
+.add-team-btn:hover{border-color:var(--neon);color:var(--neon)}
+.settings-row{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap}
+.setting{flex:1;min-width:130px}
+.setting label{display:block;font-size:.78rem;color:#777;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:1px}
+.setting select,.setting input[type=checkbox]{background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:100%}
+.speed-toggle{display:flex;align-items:center;gap:.6rem;margin-top:1.25rem;padding:.75rem 1rem;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.25);border-radius:10px;cursor:pointer}
+.speed-toggle input{width:auto;padding:0}
+.speed-toggle span{font-size:.9rem;color:var(--retro)}
+.btn-start{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,var(--pink),var(--retro));color:#fff;border:none;border-radius:10px;font-size:1.15rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:filter .15s}
+.btn-start:hover{filter:brightness(1.1)}
+.share-section{background:rgba(0,245,212,.05);border:1px solid rgba(0,245,212,.2);border-radius:12px;padding:1.25rem;margin-top:1rem}
+.share-section h3{font-size:1rem;color:var(--neon);margin-bottom:.75rem}
+.btn-download{display:flex;align-items:center;justify-content:center;gap:.5rem;background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.6rem 1rem;font-weight:700;font-size:.9rem;cursor:pointer;transition:border-color .15s;text-decoration:none;width:100%}
+.btn-download:hover{border-color:var(--neon)}
+.share-note{font-size:.78rem;color:#555;margin-top:.5rem;line-height:1.5}
+
+/* TEAM COLOR BADGES */
+.tc0{background:#f72585;color:#fff}.tc1{background:#4cc9f0;color:#000}.tc2{background:#7bed9f;color:#000}
+.tc3{background:#ffd60a;color:#000}.tc4{background:#ff6b35;color:#fff}.tc5{background:#b185db;color:#fff}
+.tc6{background:#00f5d4;color:#000}.tc7{background:#ff6b6b;color:#fff}.tc8{background:#06d6a0;color:#000}
+.tc9{background:#118ab2;color:#fff}.tc10{background:#ef476f;color:#fff}.tc11{background:#ffd166;color:#000}
+.tc12{background:#3a86ff;color:#fff}.tc13{background:#8338ec;color:#fff}.tc14{background:#fb5607;color:#fff}
+
+/* ── GAME ── */
+#game{display:flex;flex-direction:column}
+.game-header{background:var(--card);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.game-logo{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--retro),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.q-counter{color:#999;font-size:.85rem;white-space:nowrap}
+.header-right{display:flex;gap:.5rem;align-items:center}
+.btn-mute{background:transparent;border:1px solid var(--border);color:#aaa;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:1rem;transition:all .15s;line-height:1}
+.btn-mute:hover{border-color:var(--neon);color:var(--neon)}
+.btn-mute.muted{color:#555;border-color:#333}
+.btn-end{background:transparent;border:1px solid var(--border);color:#888;border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.85rem;transition:all .15s}
+.btn-end:hover{border-color:var(--pink);color:var(--pink)}
+
+/* Question progress bar */
+.q-progress-wrap{height:4px;background:var(--border);position:relative;overflow:hidden}
+.q-progress-bar{height:100%;background:linear-gradient(90deg,var(--neon),var(--retro));transition:width .5s ease;border-radius:0 2px 2px 0}
+
+.game-body{flex:1;padding:1.25rem 1.5rem;display:grid;grid-template-columns:1fr 280px;gap:1.25rem;max-width:1100px;width:100%;margin:0 auto}
+@media(max-width:750px){.game-body{grid-template-columns:1fr}.side-panel{order:-1}}
+.question-col{display:flex;flex-direction:column;gap:1rem}
+
+/* Timer */
+.timer-row{display:flex;align-items:center;gap:.75rem}
+.timer-num{font-size:2.8rem;font-weight:900;width:72px;text-align:center;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums}
+.timer-num.urgent{color:var(--pink);animation:blink .5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.bar-wrap{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.bar{height:100%;background:var(--gold);border-radius:4px;transition:width 1s linear,background .5s}
+.bar.urgent{background:var(--pink)}
+.bar.speed{background:var(--retro)}
+.btn-pause{background:var(--border);border:none;color:#fff;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:1rem;transition:background .15s}
+.btn-pause:hover{background:#3a3a5a}
+
+/* Speed round badge */
+.speed-badge{display:none;align-items:center;gap:.4rem;background:rgba(255,107,53,.15);border:1px solid var(--retro);border-radius:8px;padding:.35rem .75rem;font-size:.8rem;font-weight:700;color:var(--retro)}
+.speed-badge.visible{display:flex}
+.worth-badge{border-radius:8px;padding:.35rem .75rem;font-size:.85rem;font-weight:800;white-space:nowrap;border:1px solid;transition:all .4s}
+.worth-hot{background:rgba(255,107,53,.18);border-color:var(--retro);color:var(--retro)}
+.worth-std{background:rgba(0,245,212,.12);border-color:var(--neon);color:var(--neon)}
+.worth-late{background:rgba(180,180,180,.1);border-color:#777;color:#aaa}
+
+/* Question card */
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.modern-strip{background:linear-gradient(135deg,#1a1a40,#2d0a3e);padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)}
+.strip-label{font-size:.72rem;text-transform:uppercase;letter-spacing:3px;color:var(--neon);margin-bottom:.3rem}
+.strip-title{font-size:1.7rem;font-weight:900}
+.strip-meta{color:#aaa;font-size:.95rem;margin-top:.15rem}
+.cat-badge{display:inline-block;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;padding:.2rem .5rem;border-radius:4px;margin-top:.4rem}
+.cat-hip-hop{background:rgba(247,37,133,.2);color:#f72585}
+.cat-rock{background:rgba(255,107,53,.2);color:#ff6b35}
+.cat-soul{background:rgba(0,245,212,.15);color:#00f5d4}
+.cat-classical{background:rgba(255,214,10,.15);color:#ffd60a}
+.q-text{padding:1.25rem 1.5rem;font-size:1.15rem;line-height:1.55;border-bottom:1px solid var(--border)}
+.hint-row{padding:1rem 1.5rem;background:rgba(255,107,53,.1);border-bottom:1px solid var(--border);border-left:4px solid var(--retro)}
+.hint-label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--retro);font-weight:700;margin-bottom:.4rem}
+.hint-text{color:#e8e8e8;font-style:italic;font-size:1.05rem;line-height:1.55}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:1.25rem 1.5rem}
+@media(max-width:500px){.options{grid-template-columns:1fr}}
+.opt{background:var(--dark);border:2px solid var(--border);border-radius:10px;padding:.85rem 1rem;text-align:left;cursor:pointer;color:#fff;font-size:.95rem;transition:all .15s;display:flex;align-items:center;gap:.65rem}
+.opt:hover{border-color:var(--neon);background:rgba(0,245,212,.05)}
+.opt.correct{border-color:#7bed9f;background:rgba(123,237,159,.12)}
+.opt.correct .ltr{background:#7bed9f;color:#000}
+.opt.wrong{border-color:var(--pink);background:rgba(247,37,133,.05);opacity:.45;pointer-events:none}
+.opt[disabled]{pointer-events:none}
+.ltr{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--border);font-weight:700;font-size:.8rem;flex-shrink:0}
+.ctrl-row{display:flex;gap:.75rem}
+.btn-reveal{flex:1;padding:.85rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;font-weight:700;font-size:1rem;border:none;border-radius:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:filter .15s}
+.btn-reveal:hover{filter:brightness(1.1)}
+.btn-reveal:disabled{opacity:.4;cursor:not-allowed}
+.btn-next{flex:1;padding:.85rem;background:var(--card);border:1px solid var(--border);color:#fff;font-weight:700;font-size:1rem;border-radius:10px;cursor:pointer;transition:border-color .15s}
+.btn-next:hover:not(:disabled){border-color:var(--neon)}
+.btn-next:disabled{opacity:.35;cursor:not-allowed}
+
+/* Sidebar */
+.side-panel{display:flex;flex-direction:column;gap:1rem}
+.scoreboard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem}
+.sb-title{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#666;margin-bottom:.85rem}
+.sb-rows{display:flex;flex-direction:column;gap:.5rem}
+.sb-row{display:flex;align-items:center;gap:.6rem}
+.sb-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.sb-name{flex:1;font-weight:600;font-size:.9rem}
+.sb-pts{font-weight:900;font-size:1.1rem}
+.sb-streak{font-size:.8rem;margin-left:.2rem}
+.diff-badge{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:#888}
+.diff-dot{width:8px;height:8px;border-radius:50%}
+
+/* Music panel */
+.music-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:.75rem}
+.mp-head{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555}
+.mp-artwork{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;background:var(--border);display:none}
+.mp-artwork.loaded{display:block}
+.mp-info-label{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--neon);margin-bottom:.2rem}
+.mp-info-name{font-weight:700;font-size:.9rem;line-height:1.3}
+.mp-info-sub{font-size:.78rem;color:#888;margin-top:.1rem}
+.mp-ctrl{display:flex;align-items:center;gap:.6rem}
+.mp-btn-play{width:36px;height:36px;border-radius:50%;border:none;background:var(--neon);color:#000;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:filter .15s}
+.mp-btn-play:hover{filter:brightness(1.1)}
+.mp-progress-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;cursor:pointer;overflow:hidden}
+.mp-bar{height:100%;background:var(--neon);border-radius:3px;width:0%;transition:width .3s linear}
+.mp-time-row{display:flex;justify-content:space-between;font-size:.72rem;color:#666;margin-top:-.25rem}
+.mp-loading-msg{font-size:.82rem;color:#555;text-align:center;padding:.5rem}
+.mp-err-msg{font-size:.78rem;color:#555;text-align:center;padding:.25rem}
+.mp-divider{height:1px;background:var(--border)}
+.mp-paste-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:.25rem}
+.mp-paste-input{width:100%;background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;color:#fff;font-size:.8rem;outline:none;transition:border-color .2s}
+.mp-paste-input:focus{border-color:var(--neon)}
+.mp-embed{display:none;border-radius:10px;overflow:hidden;position:relative}
+.mp-embed iframe{width:100%;aspect-ratio:16/9;border:none;display:block}
+.mp-embed-clear{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;z-index:10}
+.yt-search-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;background:#cc0000;color:#fff;border-radius:8px;padding:.5rem .75rem;font-weight:700;font-size:.82rem;text-decoration:none;transition:filter .15s;border:none;cursor:pointer;width:100%}
+.yt-search-btn:hover{filter:brightness(1.15)}
+
+/* Answer overlay */
+.overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:center;justify-content:center;padding:1.5rem}
+.overlay-bg.visible{display:flex}
+.ans-card{background:var(--card);border:2px solid var(--neon);border-radius:20px;padding:2rem 2rem 1.75rem;max-width:560px;width:100%;text-align:center;animation:popIn .3s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.ans-label{color:var(--neon);font-size:.72rem;text-transform:uppercase;letter-spacing:3px;margin-bottom:.75rem}
+.ans-song{font-size:2rem;font-weight:900;margin-bottom:.3rem;background:linear-gradient(135deg,var(--gold),var(--retro));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ans-meta{color:#aaa;font-size:1rem;margin-bottom:1rem}
+.ans-fact{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:.75rem 1rem;font-size:.88rem;color:#bbb;font-style:italic;margin-bottom:1.25rem;line-height:1.5}
+.overlay-music-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem}
+.preview-orig-btn{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border-radius:8px;padding:.55rem 1.25rem;font-weight:700;font-size:.9rem;border:none;cursor:pointer;transition:filter .15s}
+.preview-orig-btn:hover{filter:brightness(1.1)}
+.yt-overlay-btn{display:inline-flex;align-items:center;gap:.5rem;background:#cc0000;color:#fff;border-radius:8px;padding:.55rem 1.25rem;font-weight:700;font-size:.9rem;text-decoration:none;transition:filter .15s}
+.yt-overlay-btn:hover{filter:brightness(1.15)}
+.award-title{font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:.75rem}
+.award-btns{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:1.5rem}
+.award-btn{padding:.55rem 1rem;border-radius:8px;border:2px solid;font-size:.88rem;font-weight:700;cursor:pointer;background:transparent;color:#fff;transition:all .15s}
+.award-btn:hover{transform:scale(1.05)}
+.award-btn.given{opacity:.45;text-decoration:line-through}
+.btn-continue{background:linear-gradient(135deg,var(--pink),var(--retro));color:#fff;padding:.8rem 2.5rem;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
+.btn-continue:hover{filter:brightness(1.1)}
+
+/* Streak toast */
+.streak-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff6b35,#ffd60a);color:#000;border-radius:12px;padding:.75rem 1.5rem;font-weight:900;font-size:1.1rem;z-index:300;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+.streak-toast.show{opacity:1}
+
+/* Results screen */
+#results{align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at top,rgba(26,10,46,.55),rgba(13,13,26,.45) 60%);overflow-y:auto}
+.res-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem;max-width:680px;width:100%;text-align:center}
+.res-trophy{font-size:3.5rem;margin-bottom:.75rem}
+.res-title{font-size:2.2rem;font-weight:900;margin-bottom:.4rem;background:linear-gradient(135deg,var(--gold),var(--retro));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.res-winner{font-size:1.3rem;font-weight:700;color:var(--neon);margin-bottom:1.5rem}
+.summary-table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;font-size:.88rem}
+.summary-table th{color:#666;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;padding:.5rem .75rem;border-bottom:1px solid var(--border);text-align:center}
+.summary-table th:first-child{text-align:left}
+.summary-table td{padding:.6rem .75rem;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.summary-table td:first-child{text-align:left;font-weight:600}
+.summary-table td:not(:first-child){text-align:center}
+.summary-table tr:last-child td{border-bottom:none}
+.rank-chip{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:.8rem;background:var(--border);margin-right:.5rem}
+.rank-chip.gold{background:var(--gold);color:#000}
+.rank-chip.silver{background:#c0c0c0;color:#000}
+.rank-chip.bronze{background:#cd7f32;color:#fff}
+.chart-section{margin-bottom:1.5rem;text-align:left}
+.chart-title{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#666;margin-bottom:.75rem;text-align:center}
+.chart-wrap{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:12px;padding:1rem;position:relative;height:220px}
+.res-btns{display:flex;gap:.75rem;flex-wrap:wrap}
+.btn-again{flex:1;padding:.9rem;background:linear-gradient(135deg,var(--pink),var(--retro));color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+.btn-again:hover{filter:brightness(1.1)}
+.btn-tiebreak{flex:1;padding:.9rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+.btn-tiebreak:hover{filter:brightness(1.1)}
+
+/* Tie-breaker screen */
+#tiebreaker{align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse at top,rgba(26,10,46,.55),rgba(13,13,26,.45) 60%)}
+.tb-card{background:var(--card);border:1px solid var(--neon);border-radius:20px;padding:2.5rem;max-width:620px;width:100%;text-align:center}
+.tb-title{font-size:1.8rem;font-weight:900;color:var(--gold);margin-bottom:.25rem}
+.tb-subtitle{color:#777;font-size:.9rem;margin-bottom:2rem}
+.tb-q-num{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--neon);margin-bottom:.75rem}
+.tb-question{font-size:1.2rem;font-weight:700;margin-bottom:.5rem;line-height:1.4}
+.tb-artist{color:#aaa;margin-bottom:1.5rem}
+.tb-answer{display:none;background:rgba(0,245,212,.1);border:1px solid var(--neon);border-radius:12px;padding:1rem;margin-bottom:1.5rem}
+.tb-answer .year{font-size:3rem;font-weight:900;color:var(--gold)}
+.tb-answer .label{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--neon);margin-bottom:.25rem}
+.tb-reveal-btn{background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;padding:.8rem 2rem;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:1.5rem}
+.tb-scores{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.5rem}
+.tb-score-row{display:flex;align-items:center;gap:.75rem;background:var(--dark);border-radius:8px;padding:.6rem .9rem}
+.tb-score-name{flex:1;text-align:left;font-weight:600;font-size:.9rem}
+.tb-score-pts{font-weight:900;color:var(--gold)}
+.tb-score-closest{font-size:.75rem;color:var(--neon)}
+.tb-nav{display:flex;gap:.75rem}
+.tb-next-btn{flex:1;padding:.8rem;background:linear-gradient(135deg,var(--pink),var(--retro));color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
+.tb-done-btn{flex:1;padding:.8rem;background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="streak-toast" id="streak-toast"></div>
+
+<!-- ══ SETUP ══ -->
+<div id="setup" class="screen active">
+  <div class="logo"><h1>SAMPLE THIS!</h1><div class="sub">70s &amp; 80s Music Trivia</div></div>
+  <div class="setup-card">
+    <h2>🎮 Game Setup</h2>
+    <div class="team-inputs" id="team-inputs"></div>
+    <button class="add-team-btn" id="add-btn">+ Add Team</button>
+    <div class="settings-row">
+      <div class="setting"><label>Timer</label>
+        <select id="s-timer"><option value="0">No Timer</option><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option></select></div>
+      <div class="setting"><label>Points / Answer</label>
+        <select id="s-pts"><option value="5">5 pts</option><option value="10" selected>10 pts</option><option value="20">20 pts</option></select></div>
+      <div class="setting"><label>Question Set</label>
+        <select id="s-set"><option value="all">All Questions</option><option value="hip-hop">Hip-Hop Hits</option><option value="rock">Rock Cross-Over</option><option value="soul">Soul &amp; Funk</option><option value="easy">Easy Mode</option><option value="hard">Hard Mode</option><option value="classical">🎻 Classical</option></select></div>
+      <div class="setting"><label>Rounds to Play</label>
+        <select id="s-rounds"><option value="5">5 rounds</option><option value="10">10 rounds</option><option value="15">15 rounds</option><option value="20">20 rounds</option><option value="0" selected>All available</option></select></div>
+    </div>
+    <label class="speed-toggle"><input type="checkbox" id="s-speed"> <span>⚡ Speed Round Mode — 15 sec timer, double points on all questions</span></label>
+    <button class="btn-start" onclick="startGame()">🎵 Let's Play!</button>
+
+    <!-- Online Room (shown only when Firebase is configured) -->
+    <div id="online-section" style="display:none;background:rgba(0,245,212,.06);border:1px solid rgba(0,245,212,.25);border-radius:12px;padding:1.25rem;margin-top:1rem">
+      <h3 style="color:var(--neon);font-size:1rem;margin-bottom:.75rem">🌐 Live Online Room</h3>
+      <p style="font-size:.82rem;color:#888;margin-bottom:.75rem">Create a room and share the code — every device sees scores update in real time.</p>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center" id="join-row">
+        <button onclick="createOnlineRoom()" style="background:var(--neon);color:#000;border:none;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;font-size:.9rem">+ Create Room</button>
+        <input id="join-code-in" maxlength="5" placeholder="Room code…" style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:120px;text-transform:uppercase">
+        <button onclick="joinOnlineRoom()" style="background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.55rem 1rem;font-weight:700;cursor:pointer;font-size:.9rem">Join →</button>
+      </div>
+      <div id="room-created-msg" style="display:none;margin-top:.75rem;font-size:.95rem">
+        🏠 Room code: <strong style="color:var(--gold);font-size:1.3rem;letter-spacing:3px" id="room-code-out"></strong>
+        <span style="color:#888;font-size:.82rem;display:block;margin-top:.25rem">Share this code with other players so they can join from their own device.</span>
+      </div>
+      <div id="room-joined-msg" style="display:none;margin-top:.75rem;font-size:.88rem;color:var(--neon)"></div>
+    </div>
+
+    <!-- Not-configured: show instructions to enable Firebase -->
+    <div id="firebase-help" style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:1.25rem;margin-top:1rem">
+      <h3 style="color:var(--retro);font-size:1rem;margin-bottom:.5rem">🌐 Enable Live Multiplayer</h3>
+      <p style="font-size:.82rem;color:#888;line-height:1.55">Add a free Firebase config to unlock real-time room codes so teams on different devices see live scores. <button onclick="showDeployModal()" style="background:none;border:none;color:var(--neon);cursor:pointer;font-size:.82rem;text-decoration:underline;padding:0">How to set up →</button></p>
+    </div>
+
+    <div class="share-section">
+      <h3>📥 Share the Game</h3>
+      <button class="btn-download" onclick="downloadGame()">⬇ Download Game File</button>
+      <p class="share-note">Send the HTML file to anyone — opens in any browser, works offline except for music previews.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="game" class="screen">
+  <div class="game-header">
+    <span class="game-logo">🎵 SAMPLE THIS! <span id="live-badge" style="display:none;font-size:.6rem;background:var(--pink);color:#fff;border-radius:4px;padding:2px 6px;vertical-align:middle;letter-spacing:1px;transition:opacity .3s">LIVE</span></span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
+      <span class="q-counter" id="q-counter">Q 1 of 18</span>
+      <span style="font-size:.72rem;color:#555" id="q-remain">17 remaining</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-mute" id="mute-btn" onclick="toggleMute()" title="Toggle SFX">🔊</button>
+      <button class="btn-end" onclick="confirmEnd()">End Game</button>
+    </div>
+  </div>
+  <div class="q-progress-wrap"><div class="q-progress-bar" id="q-progress-bar"></div></div>
+
+  <div class="game-body">
+    <div class="question-col">
+      <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+        <div class="timer-row" id="timer-row" style="flex:1">
+          <div class="timer-num" id="timer-num">30</div>
+          <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+          <button class="btn-pause" id="pause-btn" onclick="toggleTimer()">⏸</button>
+        </div>
+        <div class="speed-badge" id="speed-badge">⚡ SPEED — 2×</div>
+        <div class="worth-badge worth-hot" id="worth-badge">⭐ 15 pts</div>
+      </div>
+      <div class="q-card">
+        <div class="modern-strip">
+          <div class="strip-label">🎧 The Modern Hit</div>
+          <div class="strip-title" id="q-title"></div>
+          <div class="strip-meta" id="q-meta"></div>
+          <div id="q-cat-badge"></div>
+        </div>
+        <div class="q-text" id="q-text"></div>
+        <div class="hint-row" id="q-hint"></div>
+        <div class="options" id="options"></div>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn-reveal" id="btn-reveal" onclick="revealAnswer()">🔓 Reveal Answer</button>
+        <button class="btn-next" id="btn-next" onclick="nextQ()" disabled>Next Question →</button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="scoreboard">
+        <div class="sb-title">🏆 Scoreboard</div>
+        <div class="sb-rows" id="sb-rows"></div>
+      </div>
+      <div class="diff-badge" id="diff-badge"><div class="diff-dot"></div><span></span></div>
+      <div class="music-panel">
+        <div class="mp-head">🎵 Now Playing</div>
+        <img class="mp-artwork" id="mp-artwork" src="" alt="Album art" onerror="this.classList.remove('loaded')">
+        <div><div class="mp-info-label" id="mp-label">MODERN HIT</div><div class="mp-info-name" id="mp-name">—</div><div class="mp-info-sub" id="mp-sub"></div></div>
+        <div class="mp-loading-msg" id="mp-loading" style="display:none">⏳ Loading preview…</div>
+        <div class="mp-err-msg" id="mp-error" style="display:none">Preview unavailable</div>
+        <div id="mp-controls" style="display:none">
+          <div class="mp-ctrl">
+            <button class="mp-btn-play" id="mp-btn-play" onclick="togglePlay()">▶</button>
+            <div class="mp-progress-wrap" onclick="seekAudio(event)"><div class="mp-bar" id="mp-bar"></div></div>
+            <span style="cursor:pointer;font-size:1rem" id="mp-vol" onclick="toggleMuteAudio()">🔊</span>
+          </div>
+          <div class="mp-time-row"><span id="mp-cur">0:00</span><span id="mp-dur">0:30</span></div>
+        </div>
+        <div class="mp-divider"></div>
+        <a class="yt-search-btn" id="mp-yt-btn" href="#" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+          Full song on YouTube
+        </a>
+        <div>
+          <div class="mp-paste-label">Or paste YouTube URL to embed</div>
+          <input class="mp-paste-input" id="mp-paste" type="text" placeholder="https://youtube.com/watch?v=…" oninput="embedYT(this.value)">
+        </div>
+        <div class="mp-embed" id="mp-embed">
+          <button class="mp-embed-clear" onclick="clearEmbed()">✕</button>
+          <iframe id="mp-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ANSWER OVERLAY ══ -->
+<div class="overlay-bg" id="overlay">
+  <div class="ans-card">
+    <div class="ans-label">✅ The Original Sample</div>
+    <div class="ans-song" id="a-song"></div>
+    <div class="ans-meta" id="a-meta"></div>
+    <div class="ans-fact" id="a-fact"></div>
+    <div class="overlay-music-btns">
+      <button class="preview-orig-btn" onclick="previewOriginal()">🎵 Play Original Preview</button>
+      <a class="yt-overlay-btn" id="yt-original-btn" href="#" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>YouTube
+      </a>
+    </div>
+    <div class="award-title">Award Points To…</div>
+    <div class="award-btns" id="award-btns"></div>
+    <button class="btn-continue" onclick="closeOverlay()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div id="results" class="screen">
+  <div class="res-card">
+    <div class="res-trophy">🏆</div>
+    <div class="res-title">GAME OVER!</div>
+    <div class="res-winner" id="res-winner"></div>
+    <div class="chart-section">
+      <div class="chart-title">📈 Points by Round</div>
+      <div class="chart-wrap"><canvas id="score-chart"></canvas></div>
+    </div>
+    <table class="summary-table" id="summary-table">
+      <thead><tr><th>Team</th><th>Score</th><th>Correct</th><th>Best Streak</th><th>Bonus</th></tr></thead>
+      <tbody id="summary-tbody"></tbody>
+    </table>
+    <div class="res-btns">
+      <button class="btn-tiebreak" onclick="startTiebreaker()">🎯 Tie-Breaker Round</button>
+      <button class="btn-again" onclick="resetGame()">🔄 Play Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TIE-BREAKER ══ -->
+<div id="tiebreaker" class="screen">
+  <div class="tb-card">
+    <div class="tb-title">🎯 Tie-Breaker</div>
+    <div class="tb-subtitle">Closest guess to the original release year wins the round</div>
+    <div class="tb-q-num" id="tb-q-num">Round 1 of 3</div>
+    <div class="tb-question" id="tb-question"></div>
+    <div class="tb-artist" id="tb-artist"></div>
+    <button class="tb-reveal-btn" id="tb-reveal-btn" onclick="tbReveal()">🔓 Reveal Year</button>
+    <div class="tb-answer" id="tb-answer">
+      <div class="label">Released In</div>
+      <div class="year" id="tb-year"></div>
+    </div>
+    <div class="tb-scores" id="tb-scores"></div>
+    <div class="tb-nav">
+      <button class="tb-next-btn" id="tb-next-btn" onclick="tbNext()" style="display:none">Next Round →</button>
+      <button class="tb-done-btn" onclick="resetGame()">Done — New Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deploy & Setup Modal -->
+<div id="deploy-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:#1a1a2e;border:2px solid var(--neon);border-radius:20px;padding:2rem;max-width:600px;width:100%;position:relative;max-height:90vh;overflow-y:auto">
+    <button onclick="closeDeployModal()" style="position:absolute;top:1rem;right:1rem;background:var(--border);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem">✕</button>
+    <h2 style="color:var(--neon);margin-bottom:1.5rem">🚀 Save & Deploy Sample This!</h2>
+
+    <div style="background:rgba(0,245,212,.08);border:1px solid rgba(0,245,212,.2);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
+      <h3 style="color:var(--neon);font-size:1rem;margin-bottom:.75rem">⚡ Option 1 — Netlify Drop (30 seconds, free)</h3>
+      <ol style="color:#ccc;font-size:.9rem;line-height:2;padding-left:1.25rem">
+        <li>Click the <strong>⬇ Download Game File</strong> button on this screen</li>
+        <li>Go to <a href="https://app.netlify.com/drop" target="_blank" style="color:var(--neon)">app.netlify.com/drop</a></li>
+        <li>Drag the HTML file onto the page</li>
+        <li>Get a shareable link instantly (e.g. <em>cool-name-123.netlify.app</em>)</li>
+      </ol>
+      <p style="color:#888;font-size:.82rem;margin-top:.5rem">⚠️ This hosts the game — but scores are still local to whoever opens the link.</p>
+    </div>
+
+    <div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem">
+      <h3 style="color:var(--retro);font-size:1rem;margin-bottom:.75rem">🔥 Option 2 — Firebase (live multiplayer room codes)</h3>
+      <ol style="color:#ccc;font-size:.9rem;line-height:2;padding-left:1.25rem">
+        <li>Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--retro)">console.firebase.google.com</a> → Add project</li>
+        <li>In your project: click <strong>&lt;/&gt;</strong> (Web) → register app → copy the <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">firebaseConfig</code></li>
+        <li>In the sidebar: <strong>Build → Realtime Database → Create database</strong> → choose region → <strong>Start in test mode</strong></li>
+        <li>Open this HTML file in a text editor, find <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">const FB_CONFIG = {</code> and paste your values in</li>
+        <li>Save the file and reload — the <strong>🌐 Live Online Room</strong> section appears</li>
+        <li>Deploy to Netlify (option 1 above) so everyone can access the same hosted URL</li>
+      </ol>
+      <p style="color:#888;font-size:.82rem;margin-top:.5rem">With Firebase active: host creates a room → shares 5-letter code → guests join and see live score updates as points are awarded. Free tier supports hundreds of concurrent players.</p>
+    </div>
+
+    <div style="background:rgba(180,180,180,.06);border:1px solid #2a2a4a;border-radius:12px;padding:1.25rem">
+      <h3 style="color:#aaa;font-size:1rem;margin-bottom:.75rem">📁 Option 3 — GitHub Pages (free permanent URL)</h3>
+      <ol style="color:#ccc;font-size:.9rem;line-height:2;padding-left:1.25rem">
+        <li>Create a free account at <a href="https://github.com" target="_blank" style="color:#aaa">github.com</a></li>
+        <li>New repository → name it <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">sample-this-trivia</code> → Public</li>
+        <li>Upload the HTML file, rename it <code style="background:#0d0d1a;padding:1px 5px;border-radius:3px">index.html</code></li>
+        <li>Settings → Pages → Source: main branch → Save</li>
+        <li>Your game is live at <em>yourusername.github.io/sample-this-trivia</em></li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// QUESTION BANK (28 questions)
+// ════════════════════════════════════════
+const QUESTIONS = [
+  // ── ORIGINAL 18 ──
+  {
+    modern:{title:'"Ice Ice Baby"',artist:'Vanilla Ice',year:1990},
+    original:{title:'Under Pressure',artist:'Queen & David Bowie',year:1981},
+    q:'Vanilla Ice built "Ice Ice Baby" around the iconic bass line from which 80s classic?',
+    hint:'🎸 Hint: Two legendary artists co-wrote the original — and Vanilla Ice claimed he\'d changed the bass line. He hadn\'t.',
+    fact:'"Ice Ice Baby" (1990) lifts the bass line note-for-note from "Under Pressure" (1981). Queen and David Bowie later received songwriting credit.',
+    opts:['Under Pressure','Another One Bites the Dust','Good Times','We Will Rock You'],ans:0,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"U Can\'t Touch This"',artist:'MC Hammer',year:1990},
+    original:{title:'Super Freak',artist:'Rick James',year:1981},
+    q:'MC Hammer\'s massive "U Can\'t Touch This" is built almost entirely on which Rick James funk groove?',
+    hint:'🎤 Hint: Rick James was furious at first, but admitted the exposure revived his career.',
+    fact:'"U Can\'t Touch This" (1990) samples "Super Freak" (1981) so heavily that Rick James received full songwriting credit.',
+    opts:['Give It to Me Baby','Super Freak','Mary Jane (All Night Long)','Ghetto Life'],ans:1,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"Gangsta\'s Paradise"',artist:'Coolio ft. L.V.',year:1995},
+    original:{title:'Pastime Paradise',artist:'Stevie Wonder',year:1976},
+    q:'Coolio borrowed the haunting melody for "Gangsta\'s Paradise" from which track on Stevie Wonder\'s Songs in the Key of Life?',
+    hint:'🎹 Hint: Stevie Wonder had to approve the sample — and was reportedly unhappy about the explicit lyrics.',
+    fact:'"Gangsta\'s Paradise" (1995) samples "Pastime Paradise" (1976) off Stevie Wonder\'s double-album masterpiece.',
+    opts:['Living for the City','Higher Ground','Pastime Paradise','Superstition'],ans:2,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"I\'ll Be Missing You"',artist:'Puff Daddy & Faith Evans',year:1997},
+    original:{title:'Every Breath You Take',artist:'The Police',year:1983},
+    q:'Puff Daddy\'s tribute to The Notorious B.I.G. loops the signature guitar riff from which #1 hit by The Police?',
+    hint:'🎸 Hint: Sting received full songwriting credit — and a royalty check estimated at over $2,000 per hour.',
+    fact:'"I\'ll Be Missing You" (1997) samples "Every Breath You Take" (1983). Sting said he was "very flattered."',
+    opts:['Roxanne','Don\'t Stand So Close to Me','Every Breath You Take','Message in a Bottle'],ans:2,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"Hard Knock Life (Ghetto Anthem)"',artist:'Jay-Z',year:1998},
+    original:{title:'"It\'s the Hard-Knock Life"',artist:'Annie (Broadway Musical)',year:1977},
+    q:'Jay-Z famously flipped a children\'s show-stopper for this hip-hop anthem. What Broadway musical does the sample come from?',
+    hint:'🎭 Hint: Opened on Broadway in 1977, starred a red-haired orphan. A 1982 film featured Albert Finney as Daddy Warbucks.',
+    fact:'"Hard Knock Life" (1998) samples the title song from Annie (1977) — one of the most unexpected sample flips in hip-hop history.',
+    opts:['Grease','Annie','A Chorus Line','Chicago'],ans:1,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"Mo Money Mo Problems"',artist:'The Notorious B.I.G.',year:1997},
+    original:{title:'I\'m Coming Out',artist:'Diana Ross',year:1980},
+    q:'The Puff Daddy-produced beat under Biggie\'s "Mo Money Mo Problems" was taken from which Diana Ross disco smash?',
+    hint:'🪩 Hint: Written by Nile Rodgers and Bernard Edwards of Chic — the same team behind "Good Times."',
+    fact:'"Mo Money Mo Problems" (1997) samples "I\'m Coming Out" (1980). Nile Rodgers wrote both — defining tracks of their eras.',
+    opts:['Ain\'t No Mountain High Enough','Endless Love','I\'m Coming Out','Upside Down'],ans:2,diff:'easy',cat:'soul'
+  },{
+    modern:{title:'"Blurred Lines"',artist:'Robin Thicke ft. T.I. & Pharrell',year:2013},
+    original:{title:'Got to Give It Up',artist:'Marvin Gaye',year:1977},
+    q:'Robin Thicke and Pharrell lost a $7.4 million copyright lawsuit because "Blurred Lines" was too similar to which Marvin Gaye song?',
+    hint:'🎵 Hint: Marvin Gaye recorded this in 1976 — it became his last #1 single.',
+    fact:'"Blurred Lines" (2013) was found to copy the "feel and groove" of "Got to Give It Up" (1977). A landmark music copyright verdict.',
+    opts:['Sexual Healing','What\'s Going On','Got to Give It Up','Let\'s Get It On'],ans:2,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Sing for the Moment"',artist:'Eminem',year:2002},
+    original:{title:'Dream On',artist:'Aerosmith',year:1973},
+    q:'Eminem flipped one of rock\'s most iconic piano ballads into this hip-hop anthem. Which Aerosmith classic?',
+    hint:'🎤 Hint: Steven Tyler appeared in Eminem\'s music video — blessing the collaboration in person.',
+    fact:'"Sing for the Moment" (2002) samples "Dream On" (1973). Tyler later called it one of his proudest musical moments.',
+    opts:['Walk This Way','Dream On','Sweet Emotion','Dude (Looks Like a Lady)'],ans:1,diff:'medium',cat:'rock'
+  },{
+    modern:{title:'"Harder, Better, Faster, Stronger"',artist:'Daft Punk',year:2001},
+    original:{title:'Cola Bottle Baby',artist:'Edwin Birdsong',year:1979},
+    q:'Daft Punk\'s robotic anthem loops a chopped bassline from which relatively obscure 1979 funk track?',
+    hint:'🤖 Hint: The sample got a second life when Kanye West sampled Daft Punk\'s version for "Stronger" (2007).',
+    fact:'"Harder Better Faster Stronger" (2001) samples "Cola Bottle Baby" (1979) by Edwin Birdsong, who was properly credited.',
+    opts:['Le Freak (Chic)','Flashlight (Parliament)','Cola Bottle Baby (Edwin Birdsong)','Good Times (Chic)'],ans:2,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Crazy in Love"',artist:'Beyoncé ft. Jay-Z',year:2003},
+    original:{title:'Are You My Woman (Tell Me So)',artist:'The Chi-Lites',year:1971},
+    q:'The explosive brass intro that launches "Crazy in Love" was lifted from which 1971 soul group\'s recording?',
+    hint:'🎺 Hint: The Chi-Lites are better known for "Oh Girl" — but this deep cut gave Beyoncé one of her most iconic moments.',
+    fact:'"Crazy in Love" (2003) samples the horn section from "Are You My Woman?" (1971) by The Chi-Lites.',
+    opts:['Temptations – Can\'t Get Next to You','O\'Jays – Love Train','Chi-Lites – Are You My Woman?','Four Tops – I Can\'t Help Myself'],ans:2,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Ready or Not"',artist:'The Fugees',year:1996},
+    original:{title:'Boadicea',artist:'Enya',year:1987},
+    q:'The Fugees built "Ready or Not" around a haunting loop from which new age/Celtic artist\'s 1987 track?',
+    hint:'🎵 Hint: The sample was used without clearance. The artist did not approve — and had to be paid retroactively.',
+    fact:'"Ready or Not" (1996) samples "Boadicea" (1987) by Enya. A settlement was reached after the fact.',
+    opts:['Sarah McLachlan','Enya','Sinéad O\'Connor','Loreena McKennitt'],ans:1,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Come With Me"',artist:'Puff Daddy ft. Jimmy Page',year:1998},
+    original:{title:'Kashmir',artist:'Led Zeppelin',year:1975},
+    q:'P. Diddy recruited the original guitarist to re-play the riff in the studio for this Godzilla soundtrack banger. Which Led Zeppelin epic?',
+    hint:'🎸 Hint: Jimmy Page himself plays guitar on "Come With Me" — making this more collaboration than sample.',
+    fact:'"Come With Me" (1998) is based on "Kashmir" (1975). Robert Plant refused, but Page was enthusiastic.',
+    opts:['Stairway to Heaven','Whole Lotta Love','Kashmir','Black Dog'],ans:2,diff:'medium',cat:'rock'
+  },{
+    modern:{title:'"Rapper\'s Delight"',artist:'The Sugarhill Gang',year:1979},
+    original:{title:'Good Times',artist:'Chic',year:1979},
+    q:'One of the very first mainstream rap songs sampled this same-year disco classic. Which Chic record powers "Rapper\'s Delight"?',
+    hint:'🕺 Hint: Nile Rodgers and Bernard Edwards drove to Sylvia Robinson\'s office to demand credit. They eventually received it.',
+    fact:'"Rapper\'s Delight" (1979) samples "Good Times" (1979). Both same year — sampling was so new there were no clear rules.',
+    opts:['Le Freak','Good Times','Dance Dance Dance','Everybody Dance'],ans:1,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Uptown Funk"',artist:'Mark Ronson ft. Bruno Mars',year:2015},
+    original:{title:'Oops Upside Your Head',artist:'The Gap Band',year:1979},
+    q:'Mark Ronson and Bruno Mars had to credit The Gap Band on "Uptown Funk" due to similarities with which 1979 funk track?',
+    hint:'🕺 Hint: Several other artists also received credits — including Zapp & Roger, The Time, and Sly & the Family Stone.',
+    fact:'"Uptown Funk" (2015) drew songwriting credits for multiple 70s/80s funk artists. The Gap Band\'s track was most directly cited.',
+    opts:['Outstanding','You Dropped a Bomb on Me','Oops Upside Your Head','Early in the Morning'],ans:2,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Nuthin\' But a \'G\' Thang"',artist:'Dr. Dre ft. Snoop Dogg',year:1992},
+    original:{title:'I Want\'a Do Something Freaky to You',artist:'Leon Haywood',year:1975},
+    q:'Dr. Dre\'s G-funk classic loops a bass groove from which 1975 track by a lesser-known funk and soul artist?',
+    hint:'🎧 Hint: Leon Haywood\'s original never cracked the pop top 20 — but his bass line became one of hip-hop\'s most recognized sounds.',
+    fact:'"Nuthin\' But a G Thang" (1992) samples "I Want\'a Do Something Freaky to You" (1975) — defining G-funk.',
+    opts:['Bustin\' Loose (Chuck Brown)','I Want\'a Do Something Freaky to You (Leon Haywood)','Give It Up or Turnit a Loose (James Brown)','Nautilus (Bob James)'],ans:1,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Ghetto Superstar"',artist:'Pras ft. ODB & Mýa',year:1998},
+    original:{title:'Islands in the Stream',artist:'Kenny Rogers & Dolly Parton',year:1983},
+    q:'This #1 hit from the Bulworth soundtrack interpolates the melody of which massive country/pop crossover from 1983?',
+    hint:'🤠 Hint: The original spent two weeks at #1 and became one of the best-selling country duets of all time.',
+    fact:'"Ghetto Superstar" (1998) interpolates "Islands in the Stream" (1983) — one of hip-hop\'s most surprising source materials.',
+    opts:['9 to 5 (Dolly Parton)','Islands in the Stream (Kenny Rogers & Dolly Parton)','Always on My Mind (Willie Nelson)','The Gambler (Kenny Rogers)'],ans:1,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Big Poppa"',artist:'The Notorious B.I.G.',year:1994},
+    original:{title:'Between the Sheets',artist:'The Isley Brothers',year:1983},
+    q:'Biggie\'s smooth "Big Poppa" rides a lush, sensual sample from which Isley Brothers slow jam?',
+    hint:'🛋️ Hint: The Isley Brothers\' original reached #1 on the R&B chart in 1983 — still a quiet-storm radio staple.',
+    fact:'"Big Poppa" (1994) samples "Between the Sheets" (1983). Easy Mo Bee\'s flip gave Biggie his most laid-back hit.',
+    opts:['For the Love of You','Harvest for the World','Between the Sheets','Choosy Lover'],ans:2,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Hot in Herre"',artist:'Nelly',year:2002},
+    original:{title:'Bustin\' Loose',artist:'Chuck Brown & the Soul Searchers',year:1978},
+    q:'Pharrell produced "Hot in Herre" using a sample from the Godfather of Go-Go. Whose groove did he flip?',
+    hint:'🥁 Hint: Go-Go is a subgenre of funk that originated in Washington D.C. in the mid-70s — this artist is its founding father.',
+    fact:'"Hot in Herre" (2002) samples "Bustin\' Loose" (1978) by Chuck Brown & the Soul Searchers — the record that launched Go-Go.',
+    opts:['Flash Light (Parliament)','Bustin\' Loose (Chuck Brown)','Give Up the Funk (Parliament)','Car Wash (Rose Royce)'],ans:1,diff:'hard',cat:'soul'
+  },
+
+  // ── NEW 10 ──
+  {
+    modern:{title:'"Juicy"',artist:'The Notorious B.I.G.',year:1994},
+    original:{title:'Juicy Fruit',artist:'Mtume',year:1983},
+    q:'Biggie\'s debut single loops eight bars from which silky 1983 R&B #1 hit?',
+    hint:'🍑 Hint: The producer looped just eight bars of this track. It\'s one of the most sampled grooves of the decade.',
+    fact:'"Juicy" (1994) samples "Juicy Fruit" (1983) by Mtume. Sean Combs called it the perfect backdrop for Biggie\'s debut.',
+    opts:['Juicy Fruit (Mtume)','Rock With You (Michael Jackson)','Between the Sheets (Isley Brothers)','Float On (Floaters)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Regulate"',artist:'Warren G & Nate Dogg',year:1994},
+    original:{title:'I Keep Forgettin\'',artist:'Michael McDonald',year:1982},
+    q:'Warren G heard the guitar melody of "Regulate" in a store and was immediately inspired. Which Michael McDonald hit did he sample?',
+    hint:'🎸 Hint: McDonald recorded this as a solo artist after leaving the Doobie Brothers.',
+    fact:'"Regulate" (1994) samples "I Keep Forgettin\'" (1982). Warren G said hearing it in a store inspired the entire song.',
+    opts:['I Keep Forgettin\' (Michael McDonald)','What a Fool Believes (Doobie Brothers)','Yah Mo B There (James Ingram)','Sweet Freedom (Michael McDonald)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Walk This Way"',artist:'Run-DMC ft. Aerosmith',year:1986},
+    original:{title:'Walk This Way',artist:'Aerosmith',year:1975},
+    q:'Rick Rubin walked into the room with a record and played it for Run-DMC, who\'d never heard it. Which Aerosmith track became the smash collaboration?',
+    hint:'🎸 Hint: Steven Tyler and Joe Perry joined Run-DMC in the studio — and the resulting hit saved Aerosmith\'s career.',
+    fact:'"Walk This Way" (1986) is often credited with bridging hip-hop and rock. Run-DMC initially didn\'t want to record it.',
+    opts:['Walk This Way','Sweet Emotion','Dream On','Back in the Saddle'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"99 Problems"',artist:'Jay-Z',year:2003},
+    original:{title:'The Big Beat',artist:'Billy Squier',year:1980},
+    q:'Rick Rubin dug into the rock crates for this Jay-Z track, flipping the crushing drum break from which 1980 hard-rock track?',
+    hint:'🥁 Hint: Billy Squier called the sample "the nicest thing that ever happened to that song."',
+    fact:'"99 Problems" (2003) is built on the drum break from "The Big Beat" (1980). Producer Rick Rubin pitched it to Jay-Z over the phone.',
+    opts:['The Big Beat (Billy Squier)','Lonely Is the Night (Billy Squier)','In the Dark (Billy Squier)','My Kinda Lover (Billy Squier)'],ans:0,diff:'hard',cat:'rock'
+  },{
+    modern:{title:'"Fantasy"',artist:'Mariah Carey',year:1995},
+    original:{title:'Genius of Love',artist:'Tom Tom Club',year:1981},
+    q:'Mariah Carey\'s first single to debut at #1 is built around an irresistible hook from which 1981 new-wave dance track?',
+    hint:'🎹 Hint: Tom Tom Club is a side project of two members of Talking Heads.',
+    fact:'"Fantasy" (1995) samples "Genius of Love" (1981) by Tom Tom Club. It debuted at #1, the first female artist to do so.',
+    opts:['Genius of Love (Tom Tom Club)','Psycho Killer (Talking Heads)','Wordy Rappinghood (Tom Tom Club)','Burning Down the House (Talking Heads)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Wild Thing"',artist:'Tone Loc',year:1989},
+    original:{title:'Jamie\'s Cryin\'',artist:'Van Halen',year:1978},
+    q:'Tone Loc\'s debut hit caused a legal dispute for sampling the guitar riff from which track off Van Halen\'s 1978 debut album?',
+    hint:'🎸 Hint: This was one of the earliest high-profile sampling lawsuits in hip-hop history.',
+    fact:'"Wild Thing" (1989) samples "Jamie\'s Cryin\'" by Van Halen. Despite the legal dispute, it reached #2 on the Hot 100.',
+    opts:['Jamie\'s Cryin\' (Van Halen)','Eruption (Van Halen)','Unchained (Van Halen)','Hot for Teacher (Van Halen)'],ans:0,diff:'medium',cat:'rock'
+  },{
+    modern:{title:'"It\'s Tricky"',artist:'Run-DMC',year:1986},
+    original:{title:'My Sharona',artist:'The Knack',year:1979},
+    q:'Run-DMC borrowed the driving guitar riff for "It\'s Tricky" from which power-pop smash that spent 6 weeks at #1 in 1979?',
+    hint:'🎸 Hint: This song is one of the most-sampled new wave tracks in hip-hop history.',
+    fact:'"It\'s Tricky" (1986) samples "My Sharona" (1979) by The Knack, which spent six weeks at #1 upon release.',
+    opts:['My Sharona (The Knack)','Good Girls Don\'t (The Knack)','Video Killed the Radio Star (Buggles)','Driver\'s Seat (Sniff \'n\' the Tears)'],ans:0,diff:'medium',cat:'rock'
+  },{
+    modern:{title:'"Passin\' Me By"',artist:'The Pharcyde',year:1992},
+    original:{title:'Summer Madness',artist:'Kool & the Gang',year:1974},
+    q:'The Pharcyde\'s introspective classic uses the lush Rhodes piano from which serene Kool & the Gang instrumental?',
+    hint:'🎹 Hint: This Kool & the Gang track is from their pre-pop, jazz-funk era — before "Jungle Boogie" or "Celebration."',
+    fact:'"Passin\' Me By" (1992) samples "Summer Madness" (1974) — one of the most-sampled Kool & the Gang instrumentals in hip-hop.',
+    opts:['Summer Madness (Kool & the Gang)','Jungle Boogie (Kool & the Gang)','Hollywood Swinging (Kool & the Gang)','Ladies Night (Kool & the Gang)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"One More Chance / Stay With Me (Remix)"',artist:'The Notorious B.I.G.',year:1995},
+    original:{title:'Stay With Me',artist:'DeBarge',year:1983},
+    q:'Biggie\'s smoothest jam is built on a silky 1983 ballad from which family R&B group?',
+    hint:'🎶 Hint: El DeBarge later said the sample introduced his family\'s catalog to a whole new generation.',
+    fact:'"One More Chance Remix" (1995) samples "Stay With Me" (1983) by DeBarge, giving the group renewed recognition.',
+    opts:['Stay With Me (DeBarge)','I Like It (DeBarge)','Rhythm of the Night (DeBarge)','A Dream (DeBarge)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Let Me Ride"',artist:'Dr. Dre',year:1993},
+    original:{title:'Mothership Connection (Star Child)',artist:'Parliament',year:1975},
+    q:'Dr. Dre\'s G-Funk laid-back classic draws from the cosmic 1975 Parliament anthem that George Clinton brought to Earth. Which track?',
+    hint:'🚀 Hint: George Clinton later became a frequent collaborator on Death Row Records.',
+    fact:'"Let Me Ride" (1993) samples "Mothership Connection" (1975) by Parliament, cementing George Clinton\'s legacy in hip-hop.',
+    opts:['Mothership Connection (Parliament)','Flash Light (Parliament)','Give Up the Funk (Parliament)','Aqua Boogie (Parliament)'],ans:0,diff:'hard',cat:'soul'
+  },
+
+  // ── CLASSICAL (8 questions) ──
+  {
+    modern:{title:'"I Can"',artist:'Nas',year:2002},
+    original:{title:'Für Elise',artist:'Ludwig van Beethoven',year:1810},
+    q:'Nas built this inspirational hip-hop anthem around the instantly recognisable piano melody from which Beethoven composition?',
+    hint:'One of the most recognised piano pieces ever written — you\'ve heard it in countless films, cartoons, and ice cream trucks.',
+    fact:'"I Can" (2002) loops Beethoven\'s "Für Elise" (1810). Nas used the sample intentionally to reach young listeners — the lyric opens: "Be, be, before it\'s too late."',
+    opts:['Für Elise','Moonlight Sonata','Ode to Joy (9th Symphony)','Piano Sonata No. 14'],ans:0,diff:'easy',cat:'classical'
+  },{
+    modern:{title:'"All By Myself"',artist:'Eric Carmen',year:1975},
+    original:{title:'Piano Concerto No. 2 in C minor',artist:'Sergei Rachmaninoff',year:1901},
+    q:'Eric Carmen lifted the soaring main melody and dramatic bridge for "All By Myself" directly from which Rachmaninoff concerto — without initially asking permission?',
+    hint:'Rachmaninoff\'s estate noticed immediately. Carmen had to pay significant royalties after the song became a hit.',
+    fact:'"All By Myself" (1975) uses the slow second movement of Rachmaninoff\'s Piano Concerto No. 2 (1901). Celine Dion\'s 1996 cover brought the debt to a whole new audience.',
+    opts:['Piano Concerto No. 2 (Rachmaninoff)','Rhapsody on a Theme of Paganini (Rachmaninoff)','Clair de Lune (Debussy)','Piano Concerto No. 1 (Tchaikovsky)'],ans:0,diff:'medium',cat:'classical'
+  },{
+    modern:{title:'"A Fifth of Beethoven"',artist:'Walter Murphy & the Big Apple Band',year:1976},
+    original:{title:'Symphony No. 5 in C minor',artist:'Ludwig van Beethoven',year:1808},
+    q:'This disco hit — a #1 smash featured in Saturday Night Fever — is a direct orchestral adaptation of which Beethoven symphony\'s famous opening four notes?',
+    hint:'Da-da-da-DUM. It\'s probably the most recognised opening in all of classical music.',
+    fact:'"A Fifth of Beethoven" (1976) takes Beethoven\'s Symphony No. 5 (1808) and wraps it in a Philly soul string arrangement. John Travolta danced to it in Saturday Night Fever.',
+    opts:['Symphony No. 5','Symphony No. 9 (Choral)','Symphony No. 6 (Pastoral)','Symphony No. 3 (Eroica)'],ans:0,diff:'easy',cat:'classical'
+  },{
+    modern:{title:'"Also Sprach Zarathustra"',artist:'Deodato',year:1973},
+    original:{title:'Also Sprach Zarathustra (Op. 30)',artist:'Richard Strauss',year:1896},
+    q:'Brazilian jazz-fusion artist Deodato\'s funky 1973 arrangement of this tone poem reached the Top 3. Stanley Kubrick had made the original famous just five years earlier. Which composer?',
+    hint:'You\'ll recognise the sunrise fanfare immediately — it was used as the theme for 2001: A Space Odyssey.',
+    fact:'Richard Strauss wrote the tone poem "Also Sprach Zarathustra" in 1896. Deodato\'s jazz version hit #2 on the Billboard Hot 100 in 1973, winning a Grammy.',
+    opts:['Richard Strauss — Also Sprach Zarathustra','Gustav Holst — The Planets','Igor Stravinsky — The Rite of Spring','Hector Berlioz — Symphonie Fantastique'],ans:0,diff:'medium',cat:'classical'
+  },{
+    modern:{title:'"This Night"',artist:'Billy Joel',year:1983},
+    original:{title:'Piano Sonata No. 8 "Pathétique" (2nd movement)',artist:'Ludwig van Beethoven',year:1799},
+    q:'Billy Joel borrowed the hauntingly beautiful melody from the slow movement of which Beethoven piano sonata for his 1983 ballad "This Night"?',
+    hint:'The sonata\'s nickname means "passionate" or "suffering" in French. It\'s one of Beethoven\'s most beloved early works.',
+    fact:'"This Night" (1983) uses the Adagio cantabile from Beethoven\'s "Pathétique" Sonata (1799). Joel listed Beethoven as a co-writer in the credits.',
+    opts:['"Pathétique" Sonata No. 8 (Beethoven)','"Appassionata" Sonata No. 23 (Beethoven)','"Hammerklavier" Sonata No. 29 (Beethoven)','"Waldstein" Sonata No. 21 (Beethoven)'],ans:0,diff:'hard',cat:'classical'
+  },{
+    modern:{title:'"Could It Be Magic"',artist:'Barry Manilow',year:1975},
+    original:{title:'Prelude in C minor, Op. 28 No. 20',artist:'Frédéric Chopin',year:1839},
+    q:'Barry Manilow\'s "Could It Be Magic" (later a disco hit for Donna Summer) uses the opening chord progression and mood of which Chopin prelude?',
+    hint:'The Chopin prelude lasts barely 90 seconds — a funeral march in miniature. Manilow stretched it into a 5-minute pop epic.',
+    fact:'"Could It Be Magic" (1975) is based on Chopin\'s Prelude in C minor Op. 28 No. 20 (1839). The Chopin estate was credited as co-writer.',
+    opts:['Prelude in C minor Op. 28 No. 20 (Chopin)','Nocturne in E-flat major (Chopin)','Ballade No. 1 in G minor (Chopin)','Étude Op. 10 No. 3 (Chopin)'],ans:0,diff:'hard',cat:'classical'
+  },{
+    modern:{title:'"Toccata"',artist:'Sky',year:1980},
+    original:{title:'Toccata and Fugue in D minor (BWV 565)',artist:'J.S. Bach',year:1703},
+    q:'UK prog-rock group Sky took Bach\'s most famous organ showpiece and turned it into a UK Top 5 hit in 1980. Which Bach composition did they adapt?',
+    hint:'You\'ve heard this piece in every Halloween special, horror film, and spooky cartoon. The opening pedal tone is iconic.',
+    fact:'"Toccata" (1980) by Sky is an electric arrangement of Bach\'s "Toccata and Fugue in D minor" (c.1703). It reached #5 in the UK and introduced Bach to a rock audience.',
+    opts:['Toccata and Fugue in D minor (Bach)','Brandenburg Concerto No. 3 (Bach)','The Well-Tempered Clavier (Bach)','Air on the G String (Bach)'],ans:0,diff:'medium',cat:'classical'
+  },{
+    modern:{title:'"Sadeness Part I"',artist:'Enigma',year:1990},
+    original:{title:'Kyrie Fons Bonitatis (Gregorian chant)',artist:'Medieval monks',year:1100},
+    q:'Enigma\'s haunting 1990 debut single — a #1 hit across Europe — layered electronic beats over which ancient sacred musical tradition?',
+    hint:'This musical tradition dates back over 1,000 years and was performed exclusively by monks in Latin for Catholic liturgy.',
+    fact:'"Sadeness Part I" (1990) samples a recording of Gregorian chant "Kyrie Fons Bonitatis." Enigma used the recordings without clearance, leading to a major lawsuit settled out of court.',
+    opts:['Gregorian chant','Bach\'s Mass in B minor','Mozart\'s Requiem','Handel\'s Messiah'],ans:0,diff:'medium',cat:'classical'
+  },
+
+  // ── SOUL & POP WAVE 3 (15 questions) ──
+  {
+    modern:{title:'"Gettin\' Jiggy Wit It"',artist:'Will Smith',year:1997},
+    original:{title:'He\'s the Greatest Dancer',artist:'Sister Sledge',year:1979},
+    q:'Will Smith\'s Grammy-winning 1997 dancefloor hit is built on which disco track by the group best known for "We Are Family"?',
+    hint:'🕺 Nile Rodgers of Chic produced the original — and the same bass line that powered Sister Sledge powered Will Smith\'s comeback.',
+    fact:'"Gettin\' Jiggy Wit It" (1997) samples "He\'s the Greatest Dancer" (1979) by Sister Sledge. Will Smith won a Grammy for Best Rap Solo Performance for it.',
+    opts:['He\'s the Greatest Dancer (Sister Sledge)','We Are Family (Sister Sledge)','Thinking of You (Sister Sledge)','Lost in Music (Sister Sledge)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Men in Black"',artist:'Will Smith',year:1997},
+    original:{title:'Forget Me Nots',artist:'Patrice Rushen',year:1982},
+    q:'The swaggering brass hook powering Will Smith\'s MIB theme was sampled from which 1982 funk classic that also became one of the most-licensed samples in hip-hop?',
+    hint:'🎺 The bassline and brass arrangement from Patrice Rushen\'s original became so iconic it has appeared in over 200 recordings.',
+    fact:'"Men in Black" (1997) samples "Forget Me Nots" (1982) by Patrice Rushen — one of the most sampled tracks in pop history, also used by George Michael and many others.',
+    opts:['Forget Me Nots (Patrice Rushen)','Haven\'t You Heard (Patrice Rushen)','Hang It Up (Patrice Rushen)','Settle for My Love (Patrice Rushen)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Summertime"',artist:'DJ Jazzy Jeff & The Fresh Prince',year:1991},
+    original:{title:'Summer Madness',artist:'Kool & the Gang',year:1974},
+    q:'Will Smith and DJ Jazzy Jeff\'s sun-drenched 1991 hit looped the same serene Kool & the Gang instrumental that also powered The Pharcyde\'s "Passin\' Me By." Which track?',
+    hint:'☀️ The same mellow 1974 groove was so perfect for summer that two iconic hip-hop tracks used it within a year of each other.',
+    fact:'"Summertime" (1991) and "Passin\' Me By" (1992) both sample "Summer Madness" (1974) by Kool & the Gang — showing how one perfect groove can anchor multiple classics.',
+    opts:['Summer Madness (Kool & the Gang)','Jungle Boogie (Kool & the Gang)','Hollywood Swinging (Kool & the Gang)','Open Sesame (Kool & the Gang)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Set Adrift on Memory Bliss"',artist:'PM Dawn',year:1991},
+    original:{title:'True',artist:'Spandau Ballet',year:1983},
+    q:'PM Dawn\'s dreamy 1991 #1 hit is woven around the shimmering synth and melody of which Spandau Ballet new romantic classic?',
+    hint:'💫 "True" spent four weeks at #1 in the UK in 1983. The chorus phrase became one of the most recognised in the decade.',
+    fact:'"Set Adrift on Memory Bliss" (1991) samples "True" (1983) by Spandau Ballet. It gave PM Dawn one of the most distinctive sounds of early 90s hip-hop.',
+    opts:['True (Spandau Ballet)','Gold (Spandau Ballet)','Through the Barricades (Spandau Ballet)','Only When You Leave (Spandau Ballet)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Killing Me Softly with His Song"',artist:'The Fugees',year:1996},
+    original:{title:'Killing Me Softly with His Song',artist:'Roberta Flack',year:1973},
+    q:'Lauryn Hill\'s stunning vocal on the Fugees\' biggest hit was a reinvention of which 1973 Roberta Flack Grammy winner that spent five weeks at #1?',
+    hint:'🎤 Roberta Flack reportedly wrote the song after watching Don McLean perform live at the Troubadour in 1971 — hence the lyric "I heard he sang a good song."',
+    fact:'The Fugees\' version of "Killing Me Softly" (1996) helped introduce Roberta Flack\'s 1973 original to an entirely new generation.',
+    opts:['Roberta Flack (1973)','Lori Lieberman (1971)','Carly Simon (1972)','Diana Ross (1974)'],ans:0,diff:'easy',cat:'soul'
+  },{
+    modern:{title:'"Higher Ground"',artist:'Red Hot Chili Peppers',year:1989},
+    original:{title:'Higher Ground',artist:'Stevie Wonder',year:1974},
+    q:'The Red Hot Chili Peppers gave this Stevie Wonder funk classic a punk-funk makeover on their 1989 album Mother\'s Milk. Which song?',
+    hint:'🎸 Stevie Wonder wrote and recorded the original just weeks after a near-fatal car accident in 1973 — finishing it before leaving the hospital.',
+    fact:'"Higher Ground" was written and recorded by Stevie Wonder in 1974 during a remarkably creative period. RHCP\'s sped-up, distorted cover became one of their early fan favourites.',
+    opts:['Higher Ground (Stevie Wonder)','Superstition (Stevie Wonder)','Signed Sealed Delivered (Stevie Wonder)','Living for the City (Stevie Wonder)'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"Take Me to the River"',artist:'Talking Heads',year:1978},
+    original:{title:'Take Me to the River',artist:'Al Green',year:1974},
+    q:'Talking Heads turned this Southern soul baptism song into a new wave staple on their 1978 debut album. Who originally sang it with full gospel conviction?',
+    hint:'⛪ Al Green wrote the original while at the height of his fame — combining the heat of the church with the heat of romance.',
+    fact:'"Take Me to the River" (1974) was written by Al Green and Mabon Hodges. Talking Heads\' 1978 cover introduced it to the rock world and is now nearly as famous as the original.',
+    opts:['Al Green','Otis Redding','Wilson Pickett','Sam Cooke'],ans:0,diff:'medium',cat:'rock'
+  },{
+    modern:{title:'"Lady Marmalade"',artist:'Christina Aguilera, Lil\' Kim, Mýa & Pink',year:2001},
+    original:{title:'Lady Marmalade',artist:'LaBelle',year:1975},
+    q:'The Moulin Rouge! version of "Lady Marmalade" was a cover of a 1975 #1 hit by a trio featuring a future solo superstar. Which group?',
+    hint:'💃 The lead singer of the original group — featuring the French phrase "Voulez-vous coucher avec moi" — later had a huge solo career of her own.',
+    fact:'"Lady Marmalade" was originally recorded by LaBelle (featuring Patti LaBelle) in 1975. It spent one week at #1. The 2001 version for Moulin Rouge! also hit #1.',
+    opts:['LaBelle','The Three Degrees','First Choice','Sister Sledge'],ans:0,diff:'easy',cat:'soul'
+  },{
+    modern:{title:'"Word Up!"',artist:'Korn',year:1997},
+    original:{title:'Word Up!',artist:'Cameo',year:1986},
+    q:'Nu-metal band Korn caused a stir with their heavy cover of which 1986 Cameo funk hit — showing that the groove was powerful enough to survive almost any genre treatment?',
+    hint:'🎸 Cameo\'s original features one of the most iconic bass lines of the 80s, and lead singer Larry Blackmon\'s famous red codpiece on the cover.',
+    fact:'"Word Up!" (1986) by Cameo reached #6 on the Billboard Hot 100. Korn\'s 1997 metal cover appeared on the Spawn soundtrack and introduced the song to a new rock audience.',
+    opts:['Word Up! (Cameo)','Candy (Cameo)','Single Life (Cameo)','Back and Forth (Cameo)'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"Sweet Dreams (Are Made of This)"',artist:'Marilyn Manson',year:1995},
+    original:{title:'Sweet Dreams (Are Made of This)',artist:'Eurythmics',year:1983},
+    q:'Marilyn Manson\'s industrial metal makeover of which 1983 Eurythmics synth-pop classic launched him into mainstream consciousness?',
+    hint:'🎹 Annie Lennox and Dave Stewart wrote the original in a single session using a borrowed synthesiser. It defined the sound of 1983.',
+    fact:'"Sweet Dreams" was originally recorded by Eurythmics in 1983 and spent two weeks at #1 in the US. Manson\'s 1995 slowed-down metal version brought it to an entirely new audience.',
+    opts:['Eurythmics (1983)','Human League (1981)','Soft Cell (1981)','Depeche Mode (1984)'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"Blue Monday"',artist:'Orgy',year:1998},
+    original:{title:'Blue Monday',artist:'New Order',year:1983},
+    q:'Industrial rock band Orgy had a surprise hit with their electro-goth cover of which New Order 1983 record — famously the best-selling 12" single of all time?',
+    hint:'💿 New Order reportedly lost money on every copy sold because the elaborate die-cut floppy-disk sleeve cost more to produce than the record\'s price.',
+    fact:'"Blue Monday" (1983) by New Order is the best-selling 12" single in history. Orgy\'s 1998 cover appeared on the City of Angels soundtrack and hit the top 20.',
+    opts:['Blue Monday (New Order)','True Faith (New Order)','Bizarre Love Triangle (New Order)','Regret (New Order)'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"Hanging on the Telephone"',artist:'Blondie',year:1978},
+    original:{title:'Hanging on the Telephone',artist:'The Nerves',year:1976},
+    q:'Debbie Harry and Blondie put this song on the map in 1978 — but it was originally a scrappy power-pop single by which LA trio two years earlier?',
+    hint:'📞 Jack Lee of The Nerves wrote the song. He was reportedly delighted when Blondie covered it — the royalties changed his life.',
+    fact:'"Hanging on the Telephone" was originally recorded by The Nerves in 1976. Blondie\'s polished 1978 version became a new wave classic and gave the song an immortal second life.',
+    opts:['The Nerves','The Buzzcocks','The Undertones','The Records'],ans:0,diff:'hard',cat:'rock'
+  },{
+    modern:{title:'"Just the Two of Us"',artist:'Will Smith',year:1997},
+    original:{title:'Just the Two of Us',artist:'Bill Withers & Grover Washington Jr.',year:1981},
+    q:'Will Smith repurposed this 1981 Bill Withers hit as a touching letter to his newborn son Trey. Which jazz-soul classic did he remake?',
+    hint:'👶 Will Smith rewrote the lyrics completely — turning a love song between adults into one of the most heartfelt rap tributes to fatherhood ever recorded.',
+    fact:'"Just the Two of Us" (1997) is an interpolation of the 1981 original by Grover Washington Jr. featuring Bill Withers. Smith\'s version reached #20 and won a Grammy nomination.',
+    opts:['Just the Two of Us (Bill Withers & Grover Washington Jr.)','Lean on Me (Bill Withers)','Lovely Day (Bill Withers)','Ain\'t No Sunshine (Bill Withers)'],ans:0,diff:'easy',cat:'soul'
+  },{
+    modern:{title:'"Freak Like Me" (Sugababes version)',artist:'Sugababes',year:2002},
+    original:{title:'Are "Friends" Electric?',artist:'Tubeway Army / Gary Numan',year:1979},
+    q:'The Sugababes scored a UK #1 by mashing up Adina Howard\'s lyrics with the electronic riff from which Gary Numan post-punk synth classic?',
+    hint:'🤖 Gary Numan\'s 1979 track sat at #1 in the UK for four weeks. Twenty-three years later, its synth riff powered a whole new generation\'s chart-topper.',
+    fact:'"Freak Like Me" (Sugababes, 2002) combines Adina Howard\'s 1995 vocal with the iconic synth riff from Gary Numan\'s "Are \'Friends\' Electric?" (1979) — a perfect decades-spanning mashup.',
+    opts:['Are "Friends" Electric? (Gary Numan / Tubeway Army)','Cars (Gary Numan)','Down in the Park (Gary Numan)','We Are Glass (Gary Numan)'],ans:0,diff:'medium',cat:'rock'
+  },
+
+  // ── CLASSICAL (4 more) ──
+  {
+    modern:{title:'"Adagio for Strings"',artist:'DJ Tiësto',year:2004},
+    original:{title:'Adagio for Strings, Op. 11',artist:'Samuel Barber',year:1936},
+    q:'DJ Tiësto turned one of the most emotionally devastating pieces of 20th-century orchestral music into a trance anthem. Whose composition did he adapt?',
+    hint:'The original was composed in 1936 and gained lasting fame after being played at Franklin D. Roosevelt\'s funeral in 1945.',
+    fact:'Tiësto\'s 2004 trance version of Samuel Barber\'s "Adagio for Strings" (1936) became a global club hit, introducing the piece to millions of dance music fans.',
+    opts:['Samuel Barber — Adagio for Strings','Albinoni — Adagio in G minor','Pachelbel — Canon in D','Satie — Gymnopédie No. 1'],ans:0,diff:'medium',cat:'classical'
+  },{
+    modern:{title:'"Apotheosis"',artist:'Era',year:1996},
+    original:{title:'O Fortuna (from Carmina Burana)',artist:'Carl Orff',year:1937},
+    q:'Era\'s chant-driven 1996 European smash is built on the dramatic opening of which choral masterwork that also appears in countless film trailers and sporting events?',
+    hint:'The famous chorus opens with the words "O Fortuna, velut luna" — calling on the wheel of fortune. You\'ve definitely heard it in a film.',
+    fact:'"Apotheosis" (1996) draws heavily from Carl Orff\'s "O Fortuna" from Carmina Burana (1937). Orff spent years creating this secular cantata based on medieval poems.',
+    opts:['O Fortuna — Carmina Burana (Carl Orff)','Requiem in D minor (Mozart)','Messiah — Hallelujah Chorus (Handel)','Stabat Mater (Pergolesi)'],ans:0,diff:'medium',cat:'classical'
+  },{
+    modern:{title:'"Creep"',artist:'Radiohead',year:1992},
+    original:{title:'The Air That I Breathe',artist:'The Hollies',year:1974},
+    q:'Radiohead\'s breakthrough hit was found to borrow the chord progression and melody from a 1974 pop ballad so substantially that its composers were given songwriting credit. Which song?',
+    hint:'The two writers of the original received a settlement and are now listed as co-writers on every Radiohead recording of this song.',
+    fact:'"Creep" (1992) borrowed enough from The Hollies\' "The Air That I Breathe" (1974) that Albert Hammond and Mike Hazlewood were added as co-writers. Radiohead have described the outcome as fair.',
+    opts:['The Air That I Breathe (The Hollies)','Bus Stop (The Hollies)','He Ain\'t Heavy He\'s My Brother (The Hollies)','Long Cool Woman (The Hollies)'],ans:0,diff:'medium',cat:'classical'
+  },{
+    modern:{title:'"Because"',artist:'The Beatles',year:1969},
+    original:{title:'Moonlight Sonata (Piano Sonata No. 14)',artist:'Ludwig van Beethoven',year:1801},
+    q:'John Lennon wrote "Because" after asking Yoko Ono to play Beethoven backwards on the piano. Which famous Beethoven sonata inspired the song\'s haunting chord sequence?',
+    hint:'This sonata is nicknamed after moonlight — a description a critic applied after Beethoven\'s death that the composer himself never endorsed.',
+    fact:'"Because" (1969) was inspired by Beethoven\'s "Moonlight Sonata" (1801). Lennon asked Yoko Ono to play the sonata\'s arpeggios backwards, then built the song\'s harmony from there.',
+    opts:['Moonlight Sonata No. 14 (Beethoven)','Pathétique Sonata No. 8 (Beethoven)','Für Elise (Beethoven)','Appassionata Sonata No. 23 (Beethoven)'],ans:0,diff:'hard',cat:'classical'
+  },
+
+  // ── HIP-HOP WAVE 2 (12 questions) ──
+  {
+    modern:{title:'"It Takes Two"',artist:'Rob Base & DJ E-Z Rock',year:1988},
+    original:{title:'Think (About It)',artist:'Lyn Collins',year:1972},
+    q:'Rob Base built one of the most-played party records in hip-hop history around the opening seconds of which James Brown–produced 1972 funk track?',
+    hint:'🎤 The original\'s screamed hook was delivered by the "Female Preacher of Funk" — a James Brown protégée.',
+    fact:'"It Takes Two" (1988) samples "Think (About It)" (1972) by Lyn Collins, produced by James Brown. The same drum break appears on hundreds of hip-hop and dance tracks.',
+    opts:['Think (About It) — Lyn Collins','Funky Drummer — James Brown','Give It Up or Turnit a Loose — James Brown','Get Up Offa That Thing — James Brown'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Fight the Power"',artist:'Public Enemy',year:1989},
+    original:{title:'Funky Drummer',artist:'James Brown',year:1970},
+    q:'Public Enemy\'s landmark anthem — commissioned for Spike Lee\'s Do the Right Thing — is anchored by the drum break from which James Brown track?',
+    hint:'🥁 The drum break comes from a live extended jam recorded in Cincinnati. The drummer Clyde Stubblefield became one of the most sampled musicians in history.',
+    fact:'"Fight the Power" (1989) samples the Clyde Stubblefield drum break from James Brown\'s "Funky Drummer" (1970), which appears on over 1,000 recorded songs.',
+    opts:['Funky Drummer — James Brown','Sex Machine — James Brown','Super Bad — James Brown','Cold Sweat — James Brown'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Express Yourself"',artist:'N.W.A.',year:1988},
+    original:{title:'Express Yourself',artist:'Charles Wright & the Watts 103rd Street Rhythm Band',year:1971},
+    q:'Dr. Dre famously refused to use any drug references in this N.W.A. track — and built it on a title-matching 1971 West Coast funk groove. Which artist\'s record?',
+    hint:'🎸 Charles Wright and his group were a Los Angeles funk band — making the sample a direct West Coast-to-West Coast connection.',
+    fact:'"Express Yourself" (1988) samples the same-titled track by Charles Wright & the Watts 103rd Street Rhythm Band (1971). Dre chose this sample partly because the original had no drug references either.',
+    opts:['Express Yourself — Charles Wright & the Watts 103rd','Superfly — Curtis Mayfield','Move On Up — Curtis Mayfield','Jungle Boogie — Kool & the Gang'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Through the Wire"',artist:'Kanye West',year:2003},
+    original:{title:'Through the Fire',artist:'Chaka Khan',year:1984},
+    q:'Kanye rapped this track with his jaw literally wired shut after a car accident, recording vocals over which Chaka Khan 1984 R&B hit?',
+    hint:'🔥 Kanye couldn\'t open his mouth fully — making recording the vocals physically painful. The slurred delivery became part of the song\'s identity.',
+    fact:'"Through the Wire" (2003) samples "Through the Fire" (1984) by Chaka Khan. Kanye recorded it weeks after his near-fatal car accident, jaw still wired shut.',
+    opts:['Through the Fire (Chaka Khan)','I\'m Every Woman (Chaka Khan)','Ain\'t Nobody (Chaka Khan)','Tell Me Something Good (Chaka Khan)'],ans:0,diff:'easy',cat:'soul'
+  },{
+    modern:{title:'"Touch the Sky"',artist:'Kanye West ft. Lupe Fiasco',year:2005},
+    original:{title:'Move On Up',artist:'Curtis Mayfield',year:1970},
+    q:'Kanye sampled the propulsive horn intro from which 1970 Curtis Mayfield anthem — a song that had already become a staple of the civil rights movement?',
+    hint:'🎺 Curtis Mayfield wrote this as an uplifting message to the Black community in America. It\'s appeared in dozens of films and TV shows since.',
+    fact:'"Touch the Sky" (2005) samples "Move On Up" (1970) by Curtis Mayfield. The brass fanfare from Mayfield\'s soul classic gives Kanye\'s track an instantly anthemic feel.',
+    opts:['Move On Up (Curtis Mayfield)','Superfly (Curtis Mayfield)','Pusherman (Curtis Mayfield)','Freddie\'s Dead (Curtis Mayfield)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Heart of the City (Ain\'t No Love)"',artist:'Jay-Z',year:2001},
+    original:{title:'Ain\'t No Love in the Heart of the City',artist:'Bobby "Blue" Bland',year:1974},
+    q:'Jay-Z\'s brooding Blueprint opener is built on a sample from which 1974 blues-soul ballad by a Texas R&B legend?',
+    hint:'🎶 Bobby "Blue" Bland was one of the great voices of Texas blues — this track was originally produced by Michael Omartian.',
+    fact:'"Heart of the City" (2001) samples Bobby "Blue" Bland\'s "Ain\'t No Love in the Heart of the City" (1974). Kanye West produced the flip for Jay-Z\'s critically acclaimed Blueprint album.',
+    opts:['Ain\'t No Love in the Heart of the City (Bobby Blue Bland)','I Pity the Fool (Bobby Blue Bland)','Turn on Your Love Light (Bobby Blue Bland)','Stormy Monday Blues (T-Bone Walker)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"O.P.P."',artist:'Naughty by Nature',year:1991},
+    original:{title:'ABC',artist:'The Jackson 5',year:1970},
+    q:'Naughty by Nature\'s debut smash borrowed the catchy chorus melody from which Jackson 5 pop hit — giving the cheeky hook a completely different meaning?',
+    hint:'🎵 The Jackson 5 original was a #1 pop hit in 1970. Most listeners knew exactly what was being repurposed — and loved it.',
+    fact:'"O.P.P." (1991) samples "ABC" (1970) by The Jackson 5. The Jacksons received songwriting credit. Treach rewrote the chorus but kept the musical DNA intact.',
+    opts:['ABC (The Jackson 5)','I Want You Back (The Jackson 5)','The Love You Save (The Jackson 5)','I\'ll Be There (The Jackson 5)'],ans:0,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"Apache (Jump On It)"',artist:'The Sugarhill Gang',year:1981},
+    original:{title:'Apache',artist:'The Incredible Bongo Band',year:1973},
+    q:'The Sugarhill Gang\'s party staple is an adaptation of a 1973 instrumental track that became the most-sampled break beat in hip-hop history. Which recording?',
+    hint:'🥁 The break beat in the middle of the original was looped by DJs at block parties throughout the Bronx in the late 70s — it launched the breakdancing era.',
+    fact:'"Apache (Jump On It)" (1981) is based on "Apache" (1973) by The Incredible Bongo Band. The drum break from this record essentially powered the early breakdancing movement.',
+    opts:['Apache (The Incredible Bongo Band)','Bongo Rock (The Incredible Bongo Band)','Last Tango in Paris (The Incredible Bongo Band)','Dueling Bongos (The Incredible Bongo Band)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Planet Rock"',artist:'Afrika Bambaataa & the Soulsonic Force',year:1982},
+    original:{title:'Trans-Europe Express',artist:'Kraftwerk',year:1977},
+    q:'Afrika Bambaataa created electro hip-hop by layering rap over robotic synthesisers sampled from which pioneering German electronic group\'s 1977 album track?',
+    hint:'🤖 The group pioneered man-machine electronic music out of Düsseldorf, Germany — and their influence on hip-hop and dance music is incalculable.',
+    fact:'"Planet Rock" (1982) samples "Trans-Europe Express" and "Numbers" from Kraftwerk\'s 1977 and 1981 albums. It launched the entire electro genre.',
+    opts:['Trans-Europe Express (Kraftwerk)','Autobahn (Kraftwerk)','The Model (Kraftwerk)','Da Da Da (Trio)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"White Lines (Don\'t Don\'t Do It)"',artist:'Grandmaster Flash & Melle Mel',year:1983},
+    original:{title:'Cavern',artist:'Liquid Liquid',year:1983},
+    q:'This anti-drug classic sparked one of hip-hop\'s first major sampling lawsuits — the bass line was lifted without permission from which 1983 post-punk funk band?',
+    hint:'🎸 Liquid Liquid were a New York no-wave funk group on the ZE Records label. They won the lawsuit and eventually received compensation.',
+    fact:'"White Lines" (1983) samples the bass line from "Cavern" (1983) by Liquid Liquid. The suit was settled — and it helped establish early precedent for sample clearance.',
+    opts:['Cavern (Liquid Liquid)','Optimo (Liquid Liquid)','Bell Head (Liquid Liquid)','Rubbermiro (Liquid Liquid)'],ans:0,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Right Here"',artist:'SWV',year:1992},
+    original:{title:'Human Nature',artist:'Michael Jackson',year:1982},
+    q:'SWV wove the synth melody from which Michael Jackson Thriller-era ballad into the fabric of their debut R&B hit?',
+    hint:'🎹 The original was written by John Bettis and Steve Porcaro of Toto — Michael Jackson heard a demo version and immediately wanted it for the Thriller album.',
+    fact:'"Right Here" (1992) interpolates "Human Nature" (1982) from Michael Jackson\'s Thriller. The full remix is subtitled "Human Nature Mix" in tribute.',
+    opts:['Human Nature (Michael Jackson)','P.Y.T. (Michael Jackson)','The Lady in My Life (Michael Jackson)','Baby Be Mine (Michael Jackson)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Dub Be Good to Me"',artist:'Beats International',year:1990},
+    original:{title:'Just Be Good to Me',artist:'The SOS Band',year:1983},
+    q:'Norman Cook (later Fatboy Slim) built this UK #1 around the vocal melody from which SOS Band 1983 R&B hit — then added a reggae bass line from The Clash?',
+    hint:'🎵 The Clash\'s "Guns of Brixton" bass line was also sampled — combining punk, reggae, and 80s R&B in a way nobody had heard before.',
+    fact:'"Dub Be Good to Me" (1990) samples "Just Be Good to Me" (1983) by The SOS Band plus The Clash\'s "Guns of Brixton" bass. It spent four weeks at #1 in the UK.',
+    opts:['Just Be Good to Me (The SOS Band)','Take Your Time (Do It Right) (The SOS Band)','Weekend Girl (The SOS Band)','Tell Me If You Still Care (The SOS Band)'],ans:0,diff:'medium',cat:'soul'
+  },
+
+  // ── SOUL & FUNK WAVE 2 (6 questions) ──
+  {
+    modern:{title:'"Shoop"',artist:'Salt-N-Pepa',year:1993},
+    original:{title:'To Be Real',artist:'Cheryl Lynn',year:1978},
+    q:'Salt-N-Pepa\'s irresistible 1993 groove borrows its disco-funk bed from which Cheryl Lynn debut single that hit #1 on the R&B chart in 1978?',
+    hint:'🪩 "To Be Real" was Cheryl Lynn\'s debut single — produced by David Foster. It became a defining track of late-70s disco-funk.',
+    fact:'"Shoop" (1993) samples "To Be Real" (1978) by Cheryl Lynn. The original was recorded when Lynn was just 20 years old and launched her career immediately.',
+    opts:['To Be Real (Cheryl Lynn)','Got to Be Real (Cheryl Lynn)','Star Love (Cheryl Lynn)','Encore (Cheryl Lynn)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Groove Is in the Heart"',artist:'Deee-Lite',year:1990},
+    original:{title:'You\'re Not Alone',artist:'Side Effect',year:1976},
+    q:'Deee-Lite\'s psychedelic dance anthem samples the bass line from which 1976 jazz-funk B-side that had sat virtually unnoticed for 14 years before being excavated by DJs?',
+    hint:'🕺 Bootsy Collins and Q-Tip both featured on "Groove Is in the Heart" — Bootsy plays bass on the record alongside the original sample.',
+    fact:'"Groove Is in the Heart" (1990) uses the bass line from "You\'re Not Alone" (1976) by Side Effect. The record became one of the most recognisable samples of the era.',
+    opts:['You\'re Not Alone (Side Effect)','Montego Bay (Side Effect)','A Lady (Side Effect)','All About Love (Side Effect)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Return of the Mack"',artist:'Mark Morrison',year:1996},
+    original:{title:'If You Think You\'re Lonely Now',artist:'Bobby Womack',year:1981},
+    q:'Mark Morrison\'s UK smash built its groove around which brooding 1981 Bobby Womack slow jam?',
+    hint:'🎶 Bobby Womack was one of soul music\'s great survivors — writing and recording through the 70s and 80s with a raw, autobiographical style.',
+    fact:'"Return of the Mack" (1996) samples "If You Think You\'re Lonely Now" (1981) by Bobby Womack. Morrison\'s producer set the melancholy Womack groove against an uptempo beat.',
+    opts:['If You Think You\'re Lonely Now (Bobby Womack)','Across 110th Street (Bobby Womack)','That\'s the Way I Feel About \'Cha (Bobby Womack)','Harry Hippie (Bobby Womack)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Freak Like Me"',artist:'Adina Howard',year:1995},
+    original:{title:'Dance to the Drummer\'s Beat',artist:'Herman Kelly & Life',year:1978},
+    q:'Adina Howard\'s breakthrough hit is built on the drum-heavy groove from which overlooked 1978 funk track that became one of hip-hop\'s most-sampled breaks?',
+    hint:'🥁 Herman Kelly\'s drum break sits somewhere between James Brown and go-go funk — raw, repetitive, and irresistible to producers.',
+    fact:'"Freak Like Me" (1995) samples "Dance to the Drummer\'s Beat" (1978) by Herman Kelly & Life — one of the most-sampled drum breaks in soul and hip-hop history.',
+    opts:['Dance to the Drummer\'s Beat (Herman Kelly & Life)','Rock Steady (Aretha Franklin)','Give It Up or Turnit a Loose (James Brown)','Funky Nassau (The Beginning of the End)'],ans:0,diff:'hard',cat:'soul'
+  },
+
+  // ── ROCK & POP WAVE 2 (6 questions) ──
+  {
+    modern:{title:'"I Love Rock \'n\' Roll"',artist:'Joan Jett & the Blackhearts',year:1982},
+    original:{title:'I Love Rock \'n\' Roll',artist:'The Arrows',year:1975},
+    q:'Joan Jett\'s signature anthem is actually a cover of a 1975 glam-rock single by a British band she saw perform live on television. Who originally recorded it?',
+    hint:'🎸 Jett saw The Arrows perform it on a UK TV show during a 1976 tour. She loved it immediately and recorded her own version on the spot.',
+    fact:'"I Love Rock \'n\' Roll" was originally recorded by The Arrows in 1975. Joan Jett\'s 1982 version spent seven weeks at #1 in the US.',
+    opts:['The Arrows','The Sweet','Mud','Hello'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"Girls Just Want to Have Fun"',artist:'Cyndi Lauper',year:1983},
+    original:{title:'Girls Just Want to Have Fun',artist:'Robert Hazard',year:1979},
+    q:'Cyndi Lauper radically transformed this song from a male braggadocio demo into a feminist pop classic. Who originally wrote and recorded it in 1979?',
+    hint:'🎤 The original demo had completely different — and far more chauvinistic — lyrics. Lauper rewrote it from a female perspective.',
+    fact:'"Girls Just Want to Have Fun" was written by Robert Hazard in 1979. Cyndi Lauper rewrote the lyrics entirely, and her 1983 version became an anthem of the decade.',
+    opts:['Robert Hazard','Billy Steinberg','Tom Kelly','Rick Springfield'],ans:0,diff:'medium',cat:'rock'
+  },{
+    modern:{title:'"Come As You Are"',artist:'Nirvana',year:1991},
+    original:{title:'Eighties',artist:'Killing Joke',year:1984},
+    q:'Nirvana\'s "Come As You Are" guitar riff was publicly noted as almost identical to which 1984 post-punk track — whose band chose not to pursue legal action after Cobain\'s death?',
+    hint:'🎸 Killing Joke\'s bassist acknowledged the similarity but said the band didn\'t feel it was right to sue after what happened to Kurt.',
+    fact:'"Come As You Are" (1991) closely resembles "Eighties" (1984) by Killing Joke. Cobain admitted hearing the song. Killing Joke did not sue.',
+    opts:['Eighties (Killing Joke)','Wardance (Killing Joke)','Love Like Blood (Killing Joke)','The Wait (Killing Joke)'],ans:0,diff:'hard',cat:'rock'
+  },{
+    modern:{title:'"Superthug"',artist:'N.O.R.E.',year:1998},
+    original:{title:'Five Miles Out',artist:'Mike Oldfield',year:1982},
+    q:'Pharrell produced this brooding 1998 rap hit around the synth opening of which Mike Oldfield album track — creating one of hip-hop\'s most unexpected sample sources?',
+    hint:'🎸 Mike Oldfield is best known for "Tubular Bells" — the Exorcist theme. "Five Miles Out" is the title track of his 1982 album.',
+    fact:'"Superthug" (1998) samples the synth riff from "Five Miles Out" (1982) by Mike Oldfield. It was an early Pharrell production that showed his range beyond typical soul samples.',
+    opts:['Five Miles Out (Mike Oldfield)','Tubular Bells (Mike Oldfield)','Moonlight Shadow (Mike Oldfield)','Ommadawn (Mike Oldfield)'],ans:0,diff:'hard',cat:'rock'
+  },{
+    modern:{title:'"Gimme! Gimme! Gimme!"',artist:'Madonna',year:2005},
+    original:{title:'Gimme! Gimme! Gimme! (A Man After Midnight)',artist:'ABBA',year:1979},
+    q:'Madonna\'s "Hung Up" (2005) samples one of the most recognisable synth riffs in pop history — the first time ABBA had ever allowed a sample. Which track?',
+    hint:'🎹 ABBA had turned down every sample request for decades. They made an exception because they loved the finished Madonna track.',
+    fact:'"Hung Up" (2005) by Madonna samples the synth hook from ABBA\'s "Gimme! Gimme! Gimme!" (1979) — the first time ABBA had granted sampling rights in their entire catalogue.',
+    opts:['Gimme! Gimme! Gimme! (ABBA)','Dancing Queen (ABBA)','The Winner Takes It All (ABBA)','Super Trouper (ABBA)'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"All By Myself"',artist:'Celine Dion',year:1996},
+    original:{title:'All By Myself',artist:'Eric Carmen',year:1975},
+    q:'Celine Dion\'s power ballad is a cover of Eric Carmen\'s 1975 original — which itself was based on a stolen melody from a Romantic-era concerto. But which artist did Dion cover directly?',
+    hint:'🎤 Eric Carmen admitted he borrowed from Rachmaninoff without initially seeking permission — so both the 1975 and 1996 versions carry that classical debt.',
+    fact:'"All By Myself" was first recorded by Eric Carmen in 1975 using Rachmaninoff\'s Piano Concerto No. 2. Celine Dion\'s 1996 cover brought it to a new generation.',
+    opts:['Eric Carmen','Barry Manilow','Air Supply','Leo Sayer'],ans:0,diff:'easy',cat:'rock'
+  }
+];
+
+// ════════════════════════════════════════
+// SFX ENGINE (Web Audio API — renamed from Audio to avoid conflict)
+// ════════════════════════════════════════
+const SFX = (() => {
+  let ctx = null, muted = false;
+  const getCtx = () => {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
+  const play = fn => { if (!muted) try { fn(getCtx()); } catch(e){} };
+  const osc = (ac,freq,type,t,dur,gain,endGain=0.001) => {
+    const g=ac.createGain(); g.connect(ac.destination);
+    g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(endGain,t+dur);
+    const o=ac.createOscillator(); o.type=type; o.frequency.setValueAtTime(freq,t);
+    o.connect(g); o.start(t); o.stop(t+dur+.05);
+  };
+  const noise = (ac,t,dur,gain) => {
+    const buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const src=ac.createBufferSource(); src.buffer=buf;
+    const g=ac.createGain(); g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    const f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1200;
+    src.connect(f); f.connect(g); g.connect(ac.destination); src.start(t); src.stop(t+dur+.05);
+  };
+  return {
+    isMuted:()=>muted, setMuted:v=>{muted=v},
+    tick(){     play(ac=>{const t=ac.currentTime; osc(ac,880,'sine',t,.04,.08)}) },
+    urgentTick(){play(ac=>{const t=ac.currentTime; osc(ac,1200,'square',t,.04,.12); osc(ac,1200,'square',t+.07,.04,.10)})},
+    buzzer(){   play(ac=>{const t=ac.currentTime; osc(ac,160,'sawtooth',t,.3,.4); osc(ac,120,'sawtooth',t+.25,.35,.35); noise(ac,t,.5,.15)})},
+    reveal(){   play(ac=>{const t=ac.currentTime; [523,659,784,1047].forEach((f,i)=>osc(ac,f,'sine',t+i*.1,.4,.3))})},
+    pointsDing(){play(ac=>{const t=ac.currentTime; osc(ac,1318,'sine',t,.15,.5); osc(ac,1760,'sine',t+.1,.25,.4)})},
+    streakDing(){play(ac=>{const t=ac.currentTime; [784,988,1175,1568].forEach((f,i)=>osc(ac,f,'triangle',t+i*.08,.35,.4))})},
+    whoosh(){   play(ac=>{const t=ac.currentTime; const g=ac.createGain(); g.connect(ac.destination); g.gain.setValueAtTime(.2,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); const o=ac.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(200,t); o.frequency.exponentialRampToValueAtTime(800,t+.25); o.connect(g); o.start(t); o.stop(t+.35)})},
+    gameStart(){ play(ac=>{const t=ac.currentTime; [392,523,659,784].forEach((f,i)=>osc(ac,f,'triangle',t+i*.08,.25,.25))})},
+    gameOver(){  play(ac=>{const t=ac.currentTime; [[523,0,.15],[659,.15,.15],[784,.3,.15],[659,.45,.15],[784,.6,.15],[1047,.75,.45]].forEach(([f,off,dur])=>osc(ac,f,'triangle',t+off,dur,.35)); [0,.3,.75].forEach(off=>osc(ac,130,'sine',t+off,.18,.4))})},
+  };
+})();
+
+function toggleMute() {
+  const m = !SFX.isMuted(); SFX.setMuted(m);
+  const btn = document.getElementById('mute-btn');
+  btn.textContent = m ? '🔇' : '🔊'; btn.classList.toggle('muted', m);
+}
+
+// ════════════════════════════════════════
+// AUDIO PLAYER — iTunes 30-sec previews
+// ════════════════════════════════════════
+const AP = { audio: new Audio(), muted: false, origQuery: '', unlocked: false };
+AP.audio.preload = 'none'; AP.audio.volume = 0.85; AP.audio.loop = true; // loop preview!
+
+const SILENT = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+
+function unlockAudio() {
+  if (AP.unlocked) return;
+  AP.audio.src = SILENT; AP.audio.volume = 0;
+  AP.audio.play().then(()=>{ AP.audio.pause(); AP.audio.volume=0.85; AP.unlocked=true; }).catch(()=>{});
+}
+
+async function loadSongPreview(searchQuery, label, ytQuery) {
+  AP.audio.pause();
+  const $ = id => document.getElementById(id);
+  $('mp-label').textContent = label; $('mp-name').textContent = '—'; $('mp-sub').textContent = '';
+  $('mp-loading').style.display = 'block'; $('mp-error').style.display = 'none';
+  $('mp-controls').style.display = 'none'; $('mp-bar').style.width = '0%';
+  $('mp-cur').textContent = '0:00'; $('mp-artwork').classList.remove('loaded');
+  $('mp-yt-btn').href = `https://www.youtube.com/results?search_query=${encodeURIComponent(ytQuery)}`;
+  try {
+    const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchQuery)}&media=music&entity=song&limit=5`);
+    const data = await resp.json();
+    const track = (data.results||[]).find(r=>r.previewUrl);
+    if (!track) throw new Error('no preview');
+    $('mp-name').textContent = track.trackName; $('mp-sub').textContent = track.artistName;
+    $('mp-loading').style.display = 'none'; $('mp-controls').style.display = 'block';
+    const img = $('mp-artwork');
+    img.src = track.artworkUrl100.replace('100x100bb','300x300bb');
+    img.onload = ()=>img.classList.add('loaded');
+    AP.audio.src = track.previewUrl; AP.audio.volume = AP.muted ? 0 : 0.85;
+    AP.audio.ontimeupdate = ()=>{
+      if (!AP.audio.duration) return;
+      const pct = (AP.audio.currentTime/AP.audio.duration)*100;
+      $('mp-bar').style.width = pct+'%';
+      $('mp-cur').textContent = fmtTime(AP.audio.currentTime);
+      $('mp-dur').textContent = fmtTime(AP.audio.duration);
+    };
+    AP.audio.onended = ()=>{ /* loop handles restart */ };
+    AP.audio.play().then(()=>{ $('mp-btn-play').textContent='⏸'; }).catch(()=>{ $('mp-btn-play').textContent='▶'; });
+  } catch(e) { $('mp-loading').style.display='none'; $('mp-error').style.display='block'; }
+}
+
+function fmtTime(s) { if(!s||isNaN(s)) return '0:00'; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
+function togglePlay() {
+  if (!AP.audio.src||AP.audio.src===SILENT) return;
+  if (AP.audio.paused) { AP.audio.play().then(()=>{document.getElementById('mp-btn-play').textContent='⏸';}); }
+  else { AP.audio.pause(); document.getElementById('mp-btn-play').textContent='▶'; }
+}
+function seekAudio(e) { if (!AP.audio.duration) return; const r=e.currentTarget.getBoundingClientRect(); AP.audio.currentTime=((e.clientX-r.left)/r.width)*AP.audio.duration; }
+function toggleMuteAudio() { AP.muted=!AP.muted; AP.audio.volume=AP.muted?0:.85; document.getElementById('mp-vol').textContent=AP.muted?'🔇':'🔊'; }
+function stopAudio() { AP.audio.pause(); }
+function previewOriginal() {
+  if (!AP.origQuery) return;
+  const q=G.qs[G.idx];
+  loadSongPreview(AP.origQuery,'ORIGINAL SAMPLE',`${q.original.artist} ${q.original.title} official`);
+}
+function embedYT(url) {
+  const m=url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (!m) return;
+  document.getElementById('mp-iframe').src=`https://www.youtube.com/embed/${m[1]}?autoplay=1&rel=0`;
+  document.getElementById('mp-embed').style.display='block';
+}
+function clearEmbed() { document.getElementById('mp-embed').style.display='none'; document.getElementById('mp-iframe').src=''; }
+
+// ════════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════════
+const COLORS=['#f72585','#4cc9f0','#7bed9f','#ffd60a','#ff6b35','#b185db','#00f5d4','#ff6b6b','#06d6a0','#118ab2','#ef476f','#ffd166','#3a86ff','#8338ec','#fb5607'];
+const BANDS=[{name:'Fleetwood Mac',icon:'🌙'},{name:'The Eagles',icon:'🦅'},{name:'ABBA',icon:'💃'},{name:'Led Zeppelin',icon:'🚀'},{name:'Queen',icon:'♛'},{name:'The Police',icon:'🎸'},{name:'Blondie',icon:'⚡'},{name:'Talking Heads',icon:'🗣'},{name:'Heart',icon:'♥'},{name:'Bee Gees',icon:'🕺'},{name:'Earth Wind & Fire',icon:'🔥'},{name:'The Cars',icon:'🚗'},{name:'Van Halen',icon:'🤘'},{name:'Duran Duran',icon:'DD'},{name:"The Go-Go's",icon:'GG'}];
+const DIFF_INFO={easy:{color:'#7bed9f',label:'🟢 Easy'},medium:{color:'#ffd60a',label:'🟡 Medium'},hard:{color:'#f72585',label:'🔴 Hard'}};
+const CAT_INFO={'hip-hop':{cls:'cat-hip-hop',label:'Hip-Hop'},rock:{cls:'cat-rock',label:'Rock'},soul:{cls:'cat-soul',label:'Soul & Funk'},classical:{cls:'cat-classical',label:'🎻 Classical'}};
+
+let G = {};
+
+// ════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════
+function initSetup() { renderTeams([{},{},{}]); }
+function renderTeams(teams) { const c=document.getElementById('team-inputs'); c.innerHTML=''; teams.forEach((t,i)=>addTeamRow(t.name,i)); }
+function addTeamRow(name, i) {
+  const c=document.getElementById('team-inputs');
+  const rows=c.querySelectorAll('.team-row');
+  const idx=(i!==undefined)?i:rows.length;
+  if (rows.length>=15&&i===undefined) return;
+  const band=BANDS[idx%BANDS.length];
+  const defaultName=(name!==undefined&&name!=='')?name:band.name;
+  const d=document.createElement('div'); d.className='team-row';
+  d.innerHTML=`<div class="team-badge tc${idx%15}" title="${band.name}">${band.icon}</div><input type="text" placeholder="${band.name}" value="${defaultName}" maxlength="24"><button class="rm-btn" onclick="removeTeamRow(this)" title="Remove">✕</button>`;
+  c.appendChild(d);
+}
+function removeTeamRow(btn) {
+  if (document.querySelectorAll('.team-row').length<=2) return;
+  btn.closest('.team-row').remove();
+  document.querySelectorAll('.team-row').forEach((r,i)=>{
+    const band=BANDS[i%BANDS.length];
+    const badge=r.querySelector('.team-badge');
+    badge.textContent=band.icon; badge.className=`team-badge tc${i%15}`; badge.title=band.name;
+    r.querySelector('input').placeholder=band.name;
+  });
+}
+document.getElementById('add-btn').addEventListener('click',()=>{ const rows=document.querySelectorAll('.team-row'); addTeamRow('',rows.length); });
+
+function startGame() {
+  unlockAudio(); // must run inside click handler BEFORE any async work
+  const rows=document.querySelectorAll('.team-row');
+  const teams=[];
+  rows.forEach((r,i)=>{
+    const name=r.querySelector('input').value.trim()||BANDS[i%BANDS.length].name;
+    teams.push({name,score:0,color:COLORS[i%COLORS.length],streak:0,maxStreak:0,correct:0,bonus:0});
+  });
+  const timerSec=parseInt(document.getElementById('s-timer').value);
+  const pts=parseInt(document.getElementById('s-pts').value);
+  const set=document.getElementById('s-set').value;
+  const speedOn=document.getElementById('s-speed').checked;
+  let qs=[...QUESTIONS];
+  if (set==='hip-hop') qs=qs.filter(q=>q.cat==='hip-hop');
+  else if (set==='rock')  qs=qs.filter(q=>q.cat==='rock');
+  else if (set==='soul')  qs=qs.filter(q=>q.cat==='soul');
+  else if (set==='easy')  qs=qs.filter(q=>q.diff==='easy');
+  else if (set==='hard')       qs=qs.filter(q=>q.diff!=='easy');
+  else if (set==='classical')  qs=qs.filter(q=>q.cat==='classical');
+  qs.sort(()=>Math.random()-.5);
+  const rounds=parseInt(document.getElementById('s-rounds').value);
+  if (rounds>0) qs=qs.slice(0,Math.min(rounds,qs.length));
+  G={teams,qs,idx:0,timerSec,pts,speedOn,timerLeft:timerSec,interval:null,running:false,revealed:false,awarded:new Set(),history:[],chartData:[]};
+  showScreen('game'); loadQ(); renderSB(); SFX.gameStart();
+}
+
+// ════════════════════════════════════════
+// GAME LOOP
+// ════════════════════════════════════════
+function loadQ() {
+  const q=G.qs[G.idx];
+  G.revealed=false; G.awarded=new Set();
+
+  // Header counters
+  const total=G.qs.length, curr=G.idx+1, remain=total-curr;
+  document.getElementById('q-counter').textContent=`Q ${curr} of ${total}`;
+  document.getElementById('q-remain').textContent=remain===0?'Last question!':`${remain} remaining`;
+  document.getElementById('q-progress-bar').style.width=`${(curr/total)*100}%`;
+
+  // Points multiplier — rewards early correct answers
+  const mult = getRoundMultiplier(G.idx, G.qs.length);
+  const speedMult = G.speedOn ? 2 : 1;
+  G.effectivePts = Math.round(G.pts * mult * speedMult); // max available for this round
+  G.revealPts    = G.effectivePts;                        // final pts locked in at reveal
+  G.roundMult    = mult;
+
+  // Worth badge shows maximum available — counts down to actual at reveal
+  const wb = document.getElementById('worth-badge');
+  wb.textContent = `${mult===1.5?'🔥':mult===1.0?'⭐':'🌙'} Up to ${G.effectivePts} pts`;
+  wb.className = 'worth-badge ' + (mult===1.5?'worth-hot':mult===1.0?'worth-std':'worth-late');
+
+  document.getElementById('speed-badge').classList.toggle('visible',G.speedOn);
+
+  // Question card
+  document.getElementById('q-title').textContent=q.modern.title;
+  document.getElementById('q-meta').textContent=`${q.modern.artist} · ${q.modern.year}`;
+  document.getElementById('q-text').textContent=q.q;
+  const hintClean = q.hint.replace(/^[\p{Emoji}\s]*Hint:\s*/u,'');
+  document.getElementById('q-hint').innerHTML=`<span class="hint-label">💡 Hint</span><span class="hint-text">${hintClean}</span>`;
+  const ci=CAT_INFO[q.cat]||{};
+  document.getElementById('q-cat-badge').innerHTML=ci.cls?`<span class="cat-badge ${ci.cls}">${ci.label}</span>`:'';
+
+  const letters=['A','B','C','D'];
+  document.getElementById('options').innerHTML=q.opts.map((o,i)=>`<button class="opt" id="op${i}" onclick="pick(${i})"><span class="ltr">${letters[i]}</span>${o}</button>`).join('');
+  document.getElementById('btn-reveal').disabled=false;
+  document.getElementById('btn-reveal').textContent='🔓 Reveal Answer';
+  document.getElementById('btn-next').disabled=true;
+
+  const di=DIFF_INFO[q.diff];
+  const db=document.getElementById('diff-badge');
+  db.querySelector('.diff-dot').style.background=di.color;
+  db.querySelector('span').textContent=di.label;
+
+  // Music
+  clearEmbed(); document.getElementById('mp-paste').value='';
+  const ms=`${q.modern.artist} ${q.modern.title.replace(/"/g,'')}`;
+  const my=`${q.modern.artist} ${q.modern.title.replace(/"/g,'')} official`;
+  loadSongPreview(ms,'MODERN HIT',my);
+  AP.origQuery=`${q.original.artist} ${q.original.title}`;
+
+  // Timer
+  const ts=G.speedOn?15:G.timerSec;
+  G.timerLeft=ts; G.effectiveTimerSec=ts;
+  if (ts>0) {
+    document.getElementById('timer-row').style.display='flex';
+    updateBar(); startTimer();
+  } else {
+    document.getElementById('timer-row').style.display='none';
+  }
+}
+
+// Lock in time-based points at the moment of reveal
+function lockRevealPts() {
+  const total = G.effectiveTimerSec || G.timerSec;
+  if (!total || total <= 0) { G.revealPts = G.effectivePts; return; }
+  const ratio  = Math.max(0, Math.min(1, G.timerLeft / total));
+  const tMult  = 0.5 + 0.5 * ratio;           // 0.5 (expired) → 1.0 (immediate)
+  G.revealPts  = Math.max(1, Math.round(G.effectivePts * tMult));
+  // Update worth badge to show the locked value
+  const wb = document.getElementById('worth-badge');
+  const pct = Math.round(tMult * 100);
+  wb.textContent = `${pct >= 90 ? '⚡' : pct >= 70 ? '⭐' : '🌙'} ${G.revealPts} pts (${pct}%)`;
+}
+
+function pick(i) {
+  if (G.revealed) return;
+  lockRevealPts();
+  showOpts(G.qs[G.idx].ans); G.revealed=true; stopTimer();
+  document.getElementById('btn-reveal').disabled=true;
+  document.getElementById('btn-next').disabled=false;
+  SFX.reveal();
+  showOverlay(); // show award panel every time an answer is revealed
+}
+
+function revealAnswer() {
+  if (G.revealed) return;
+  lockRevealPts();
+  stopTimer(); G.revealed=true;
+  showOpts(G.qs[G.idx].ans);
+  document.getElementById('btn-reveal').disabled=true;
+  document.getElementById('btn-next').disabled=false;
+  SFX.reveal(); showOverlay();
+}
+
+function showOpts(correct) {
+  document.querySelectorAll('.opt').forEach((b,i)=>{ b.disabled=true; b.classList.add(i===correct?'correct':'wrong'); });
+}
+
+function showOverlay() {
+  const q=G.qs[G.idx];
+  document.getElementById('a-song').textContent=`"${q.original.title}"`;
+  document.getElementById('a-meta').textContent=`${q.original.artist} · ${q.original.year}`;
+  document.getElementById('a-fact').textContent=q.fact;
+  const ytQ=`${q.original.artist} ${q.original.title} official`;
+  document.getElementById('yt-original-btn').href=`https://www.youtube.com/results?search_query=${encodeURIComponent(ytQ)}`;
+  document.getElementById('award-btns').innerHTML=G.teams.map((t,i)=>`<button class="award-btn" id="ab${i}" style="border-color:${t.color};color:${t.color}" onclick="awardPts(${i})">+${G.revealPts} → ${t.name}</button>`).join('');
+  document.getElementById('overlay').classList.add('visible');
+}
+
+function awardPts(i) {
+  if (G.awarded.has(i)) {
+    G.teams[i].score-=G.revealPts; G.teams[i].correct--;
+    pushState();
+    G.teams[i].streak=0;
+    G.awarded.delete(i);
+    document.getElementById(`ab${i}`).classList.remove('given');
+  } else {
+    G.teams[i].score+=G.revealPts; G.teams[i].correct++;
+    G.teams[i].streak++;
+    G.teams[i].maxStreak=Math.max(G.teams[i].maxStreak,G.teams[i].streak);
+    // Streak bonus: 3+ in a row = +50% of base pts
+    if (G.teams[i].streak>=3) {
+      const bonus=Math.round(G.revealPts*.5);
+      G.teams[i].score+=bonus; G.teams[i].bonus+=bonus;
+      showStreakToast(G.teams[i].name,G.teams[i].streak,bonus);
+      SFX.streakDing();
+    } else {
+      SFX.pointsDing();
+    }
+    G.awarded.add(i);
+    document.getElementById(`ab${i}`).classList.add('given');
+    pushState();
+  }
+  renderSB();
+}
+
+function showStreakToast(name, streak, bonus) {
+  const icons=['','','','🔥','🔥🔥','⚡','⚡⚡','💥'];
+  const icon=icons[Math.min(streak,icons.length-1)]||'💥';
+  const toast=document.getElementById('streak-toast');
+  toast.textContent=`${icon} ${name} — ${streak}× STREAK! +${bonus} bonus`;
+  toast.classList.add('show');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>toast.classList.remove('show'),2800);
+}
+
+function closeOverlay() { document.getElementById('overlay').classList.remove('visible'); }
+
+function nextQ() {
+  stopAudio(); SFX.whoosh();
+  G.history.push({q:G.qs[G.idx],teams:[...G.awarded]});
+  // Snapshot cumulative scores for chart after this round
+  G.chartData.push(G.teams.map(t=>t.score));
+  // Reset streak for teams that weren't awarded
+  G.teams.forEach((t,i)=>{ if (!G.awarded.has(i)) t.streak=0; });
+  G.idx++;
+  pushState();
+  if (G.idx>=G.qs.length) endGame(); else loadQ();
+}
+
+function renderSB() {
+  const sorted=[...G.teams].sort((a,b)=>b.score-a.score);
+  document.getElementById('sb-rows').innerHTML=sorted.map(t=>{
+    const fire=t.streak>=3?'🔥'.repeat(Math.min(t.streak-2,3)):'';
+    return `<div class="sb-row"><div class="sb-dot" style="background:${t.color}"></div><div class="sb-name">${t.name}</div><span class="sb-streak">${fire}</span><div class="sb-pts" style="color:${t.color}">${t.score}</div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════
+function startTimer() {
+  G.running=true; document.getElementById('pause-btn').textContent='⏸';
+  G.interval=setInterval(()=>{
+    if (!G.running) return;
+    G.timerLeft--; updateBar();
+    if (G.timerLeft<=0) { stopTimer(); if (!G.revealed){SFX.buzzer();revealAnswer();} }
+    else if (G.timerLeft<=10) SFX.urgentTick();
+    else SFX.tick();
+  },1000);
+}
+function stopTimer() { clearInterval(G.interval); G.running=false; document.getElementById('pause-btn').textContent='▶'; }
+function toggleTimer() {
+  if (G.running){stopTimer();return;}
+  G.running=true; document.getElementById('pause-btn').textContent='⏸';
+  G.interval=setInterval(()=>{
+    if(!G.running)return; G.timerLeft--; updateBar();
+    if(G.timerLeft<=0){stopTimer();if(!G.revealed){SFX.buzzer();revealAnswer();}}
+    else if(G.timerLeft<=10)SFX.urgentTick(); else SFX.tick();
+  },1000);
+}
+function updateBar() {
+  const sec=G.effectiveTimerSec||G.timerSec||30;
+  const pct=Math.max(0,(G.timerLeft/sec)*100);
+  const urgent=G.timerLeft<=10;
+  const n=document.getElementById('timer-num'), b=document.getElementById('bar');
+  n.textContent=G.timerLeft; n.className='timer-num'+(urgent?' urgent':'');
+  b.style.width=pct+'%';
+  b.className='bar'+(G.speedOn?' speed':urgent?' urgent':'');
+}
+
+// ════════════════════════════════════════
+// END / RESULTS
+// ════════════════════════════════════════
+function confirmEnd() { if(confirm('End the game now and see results?')) endGame(); }
+
+function getRoundMultiplier(idx, total) {
+  const p = idx / Math.max(total, 1);
+  if (p < 0.333) return 1.5;
+  if (p < 0.667) return 1.0;
+  return 0.75;
+}
+
+function endGame() {
+  stopTimer(); stopAudio(); SFX.gameOver();
+  document.getElementById('overlay').classList.remove('visible');
+  // Always snapshot final scores — deduplicate if nextQ already pushed last round
+  const finalSnap = G.teams.map(t => t.score);
+  const prev = G.chartData[G.chartData.length - 1];
+  if (!prev || finalSnap.some((s, i) => s !== prev[i])) {
+    G.chartData.push(finalSnap);
+  }
+  const sorted=[...G.teams].sort((a,b)=>b.score-a.score);
+  document.getElementById('res-winner').textContent=`🎉 ${sorted[0].name} wins!`;
+  const ranks=['gold','silver','bronze'];
+  const tbody=document.getElementById('summary-tbody');
+  tbody.innerHTML=sorted.map((t,i)=>`
+    <tr>
+      <td><span class="rank-chip ${ranks[i]||''}">${i+1}</span><span style="color:${t.color}">${t.name}</span></td>
+      <td><strong style="color:${t.color}">${t.score}</strong></td>
+      <td>${t.correct}/${G.qs.length}</td>
+      <td>${t.maxStreak>0?'🔥'.repeat(Math.min(t.maxStreak,5))+` ${t.maxStreak}×`:'-'}</td>
+      <td>${t.bonus>0?`+${t.bonus}`:'-'}</td>
+    </tr>`).join('');
+  showScreen('results');
+  setTimeout(renderChart, 250); // wait for screen to paint before sizing the canvas
+}
+
+// ════════════════════════════════════════
+// SCORE CHART
+// ════════════════════════════════════════
+let _chart = null;
+function renderChart() {
+  if (!window.Chart) { setTimeout(renderChart, 300); return; } // CDN still loading
+  if (!G.chartData || G.chartData.length === 0) return;
+  const canvas = document.getElementById('score-chart');
+  if (!canvas) return;
+  const wrap = canvas.parentElement;
+  const w = Math.max(300, wrap.clientWidth  - 32);
+  const h = Math.max(180, wrap.clientHeight - 32);
+  canvas.width  = w;
+  canvas.height = h;
+  if (_chart) { _chart.destroy(); _chart = null; }
+
+  const labels     = G.chartData.map((_,i) => `R${i+1}`);
+  const fullLabels = ['Start', ...labels];
+  const datasets   = G.teams.map((t,i) => ({
+    label: t.name,
+    data: [0, ...G.chartData.map(snap => snap[i])],
+    borderColor: t.color,
+    backgroundColor: t.color + '28',
+    tension: 0.35,
+    fill: false,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    borderWidth: 2.5,
+  }));
+
+  Chart.defaults.color = '#aaa';
+  _chart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: fullLabels, datasets },
+    options: {
+      responsive: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, color: '#ccc', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1a1a2e', borderColor: '#2a2a4a', borderWidth: 1,
+          callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y} pts` }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#2a2a4a' }, ticks: { color: '#888' } },
+        y: { grid: { color: '#2a2a4a' }, ticks: { color: '#888' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ════════════════════════════════════════
+// TIE-BREAKER ROUND
+// ════════════════════════════════════════
+let TB = {};
+
+function startTiebreaker() {
+  // Pick 3 random questions from those played
+  const pool=[...G.qs].sort(()=>Math.random()-.5).slice(0,Math.min(3,G.qs.length));
+  TB = { qs: pool, idx: 0, scores: G.teams.map(t=>({name:t.name,color:t.color,pts:0})) };
+  showScreen('tiebreaker');
+  loadTBQuestion();
+}
+
+function loadTBQuestion() {
+  const q=TB.qs[TB.idx];
+  document.getElementById('tb-q-num').textContent=`Round ${TB.idx+1} of ${TB.qs.length}`;
+  document.getElementById('tb-question').textContent=`In what year was "${q.original.title}" by ${q.original.artist} released?`;
+  document.getElementById('tb-artist').textContent=`(Sampled in "${q.modern.title}" by ${q.modern.artist})`;
+  document.getElementById('tb-answer').style.display='none';
+  document.getElementById('tb-reveal-btn').style.display='inline-block';
+  document.getElementById('tb-next-btn').style.display='none';
+  document.getElementById('tb-scores').innerHTML='';
+}
+
+function tbReveal() {
+  const q=TB.qs[TB.idx];
+  document.getElementById('tb-year').textContent=q.original.year;
+  document.getElementById('tb-answer').style.display='block';
+  document.getElementById('tb-reveal-btn').style.display='none';
+  SFX.reveal();
+  // Show score table with input fields for guesses
+  document.getElementById('tb-scores').innerHTML=TB.scores.map((s,i)=>`
+    <div class="tb-score-row">
+      <div class="tb-score-name" style="color:${s.color}">${s.name}</div>
+      <input type="number" id="tb-guess-${i}" placeholder="Guess year…" style="background:var(--dark);border:1px solid var(--border);border-radius:6px;padding:.35rem .5rem;color:#fff;width:90px;font-size:.9rem;outline:none">
+      <div class="tb-score-closest" id="tb-result-${i}"></div>
+      <div class="tb-score-pts" id="tb-pts-${i}">${s.pts} pts</div>
+    </div>`).join('');
+  // Award button
+  document.getElementById('tb-scores').insertAdjacentHTML('beforeend',`<button onclick="awardTB()" style="margin-top:.75rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border:none;border-radius:8px;padding:.6rem 1.5rem;font-weight:700;cursor:pointer;width:100%">📊 Score Guesses</button>`);
+  document.getElementById('tb-next-btn').style.display='block';
+}
+
+function awardTB() {
+  const q=TB.qs[TB.idx];
+  const actual=q.original.year;
+  const diffs=TB.scores.map((s,i)=>{
+    const val=parseInt(document.getElementById(`tb-guess-${i}`).value)||0;
+    return {i, diff:Math.abs(val-actual), val};
+  });
+  const minDiff=Math.min(...diffs.map(d=>d.diff));
+  diffs.forEach(({i,diff,val})=>{
+    const el=document.getElementById(`tb-result-${i}`);
+    if (diff===0) { el.textContent='🎯 EXACT!'; TB.scores[i].pts+=3; }
+    else if (diff===minDiff) { el.textContent=`±${diff}yr 🥇`; TB.scores[i].pts+=1; }
+    else { el.textContent=`±${diff}yr`; }
+    document.getElementById(`tb-pts-${i}`).textContent=TB.scores[i].pts+' pts';
+  });
+}
+
+function tbNext() {
+  TB.idx++;
+  if (TB.idx>=TB.qs.length) {
+    // Show final TB winner
+    const winner=TB.scores.slice().sort((a,b)=>b.pts-a.pts)[0];
+    document.getElementById('tb-q-num').textContent='Tie-Breaker Complete!';
+    document.getElementById('tb-question').textContent=`🏆 ${winner.name} wins the Tie-Breaker!`;
+    document.getElementById('tb-artist').textContent='';
+    document.getElementById('tb-reveal-btn').style.display='none';
+    document.getElementById('tb-next-btn').style.display='none';
+    SFX.gameOver();
+  } else {
+    loadTBQuestion();
+  }
+}
+
+// ════════════════════════════════════════
+// DOWNLOAD & SHARE
+// ════════════════════════════════════════
+function downloadGame() {
+  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([html],{type:'text/html'})),download:'sample-this-trivia.html'});
+  a.click();
+}
+
+// ════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function resetGame() { showScreen('setup'); }
+
+// ════════════════════════════════════════
+// RUMOURS ALBUM ART BACKGROUND
+// ════════════════════════════════════════
+(async function loadRumoursBackground() {
+  try {
+    const resp=await fetch('https://itunes.apple.com/search?term=Fleetwood+Mac+Rumours&media=music&entity=album&limit=10');
+    const data=await resp.json();
+    const album=(data.results||[]).find(r=>r.wrapperType==='collection'&&/rumou?rs/i.test(r.collectionName))||data.results?.[0];
+    if (album?.artworkUrl100) document.body.style.backgroundImage=`url("${album.artworkUrl100.replace('100x100bb','3000x3000bb')}")`;
+  } catch(e){}
+})();
+
+// ════════════════════════════════════════════════════════
+// FIREBASE CONFIG
+// ── HOW TO ENABLE ONLINE MULTIPLAYER ──────────────────
+// 1. Go to  https://console.firebase.google.com
+// 2. Click "Add project" → give it any name → Continue
+// 3. On the project dashboard: click "</>" (Web app) → register app
+// 4. Copy the firebaseConfig object values into FB_CONFIG below
+// 5. In the Firebase console sidebar: Build → Realtime Database
+//    → Create database → choose any region → Start in test mode
+// 6. Save and reload this file — the Online Room section appears!
+//
+// ── HOW TO HOST THIS APP ONLINE (no account needed) ───
+// 1. Go to  https://app.netlify.com/drop
+// 2. Drag this HTML file onto the page
+// 3. You get a shareable link instantly (e.g. random-name.netlify.app)
+// ════════════════════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey:            "",
+  authDomain:        "",
+  databaseURL:       "",   // e.g. https://YOUR-PROJECT-default-rtdb.firebaseio.com
+  projectId:         "",
+  storageBucket:     "",
+  messagingSenderId: "",
+  appId:             ""
+};
+
+// Initialise — silently no-ops if config is empty
+const DB = (() => {
+  if (!FB_CONFIG.apiKey) return null;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    return firebase.database();
+  } catch(e) { console.warn('Firebase init failed:', e); return null; }
+})();
+
+// ── ROOM MANAGEMENT ──────────────────────────────────
+const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genCode(n=5){ return Array.from({length:n},()=>ROOM_CHARS[Math.floor(Math.random()*ROOM_CHARS.length)]).join(''); }
+
+let ROOM = null;  // active room code
+let IS_HOST = false;
+
+// Push the full game state to Firebase (host calls this after every change)
+function pushState(extraFields={}) {
+  if (!DB || !ROOM || !IS_HOST) return;
+  DB.ref(`rooms/${ROOM}/state`).set({
+    idx:       G.idx,
+    revealed:  G.revealed,
+    revealPts: G.revealPts || 0,
+    teams:     G.teams.map(t=>({name:t.name,score:t.score,color:t.color,streak:t.streak,correct:t.correct})),
+    ts:        Date.now(),
+    ...extraFields
+  });
+}
+
+// Guest devices listen for state changes and update their scoreboard
+function subscribeGuest(code) {
+  if (!DB) return;
+  DB.ref(`rooms/${code}/state`).on('value', snap => {
+    const s = snap.val();
+    if (!s || !G.teams) return;
+    // Update scores on guest device
+    s.teams.forEach((srv, i) => {
+      if (G.teams[i]) G.teams[i].score = srv.score;
+    });
+    renderSB();
+    // Flash "LIVE" indicator
+    const badge = document.getElementById('live-badge');
+    if (badge) { badge.style.display='inline-block'; setTimeout(()=>{badge.style.opacity='.4';},600); badge.style.opacity='1'; }
+  });
+}
+
+async function createOnlineRoom() {
+  if (!DB) { showDeployModal(); return; }
+  const code = genCode();
+  ROOM = code; IS_HOST = true;
+  await DB.ref(`rooms/${code}`).set({ created: Date.now(), host: true });
+  document.getElementById('room-code-out').textContent = code;
+  document.getElementById('room-created-msg').style.display = 'block';
+  document.getElementById('join-row').style.display = 'none';
+}
+
+async function joinOnlineRoom() {
+  const code = (document.getElementById('join-code-in').value||'').trim().toUpperCase();
+  if (!code) return;
+  if (!DB) { alert('Firebase is not configured in this copy of the game.'); return; }
+  const snap = await DB.ref(`rooms/${code}`).once('value');
+  if (!snap.exists()) { alert(`Room "${code}" not found — check the code.`); return; }
+  ROOM = code; IS_HOST = false;
+  document.getElementById('room-joined-msg').textContent = `✅ Joined room ${code} — scores sync live!`;
+  document.getElementById('room-joined-msg').style.display = 'block';
+  subscribeGuest(code);
+}
+
+function showDeployModal() {
+  document.getElementById('deploy-modal').style.display = 'flex';
+}
+function closeDeployModal() {
+  document.getElementById('deploy-modal').style.display = 'none';
+}
+
+initSetup();
+
+// Show/hide Firebase UI based on whether config was provided
+if (DB) {
+  document.getElementById('online-section').style.display = 'block';
+  document.getElementById('firebase-help').style.display  = 'none';
+}
+</script>
+</body>
+</html>
