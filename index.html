@@ -106,6 +106,36 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .cat-rock{background:rgba(255,107,53,.2);color:#ff6b35}
 .cat-soul{background:rgba(0,245,212,.15);color:#00f5d4}
 .cat-classical{background:rgba(255,214,10,.15);color:#ffd60a}
+.cat-yacht-rock{background:rgba(76,201,240,.18);color:#4cc9f0}
+
+/* ── DRAMATIC RESULTS SCREEN ── */
+#results{align-items:stretch;justify-content:stretch;padding:0;overflow:hidden;background:#0a0a14}
+#results-canvas{position:fixed;inset:0;pointer-events:none;z-index:300}
+.res-inner{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;min-height:100vh;position:relative;z-index:1}
+.res-header{text-align:center;margin-bottom:2rem}
+.res-header h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;background:linear-gradient(135deg,var(--gold),var(--retro));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+.res-winner-banner{font-size:clamp(1.2rem,3vw,2rem);font-weight:900;color:var(--neon);text-align:center;margin-bottom:2.5rem;opacity:0;transform:scale(.5);transition:all .6s cubic-bezier(.175,.885,.32,1.275)}
+.res-winner-banner.show{opacity:1;transform:scale(1)}
+.horse-race{width:100%;max-width:800px}
+.horse-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.horse-icon{font-size:1.4rem;width:36px;text-align:center;flex-shrink:0}
+.horse-name{min-width:140px;font-weight:700;font-size:.95rem;text-align:right;flex-shrink:0}
+.horse-track{flex:1;height:44px;background:rgba(255,255,255,.06);border-radius:8px;overflow:hidden;position:relative}
+.horse-bar{height:100%;width:0;border-radius:8px;transition:width 2.2s cubic-bezier(.15,.85,.3,1);display:flex;align-items:center;justify-content:flex-end;padding-right:.75rem}
+.horse-bar.winner-bar{box-shadow:0 0 24px currentColor;animation:winnerPulse 1.2s ease-in-out infinite 2.5s}
+@keyframes winnerPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.horse-score{font-size:1rem;font-weight:900;color:#fff;white-space:nowrap;opacity:0;transition:opacity .4s .4s}
+.horse-score.show{opacity:1}
+.horse-rank{font-size:1rem;width:28px;flex-shrink:0;text-align:center}
+.res-btns{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:2.5rem;justify-content:center}
+.res-summary-link{font-size:.8rem;color:#555;text-align:center;margin-top:1rem;cursor:pointer;text-decoration:underline}
+
+/* summary modal */
+.summary-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:400;align-items:center;justify-content:center;padding:1.5rem}
+.summary-modal.open{display:flex}
+.summary-modal-inner{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:680px;width:100%;max-height:90vh;overflow-y:auto}
+.summary-modal-inner h2{color:var(--neon);margin-bottom:1rem}
+.summary-close{float:right;background:var(--border);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem}
 .q-text{padding:1.25rem 1.5rem;font-size:1.15rem;line-height:1.55;border-bottom:1px solid var(--border)}
 .hint-row{padding:1rem 1.5rem;background:rgba(255,107,53,.1);border-bottom:1px solid var(--border);border-left:4px solid var(--retro)}
 .hint-label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--retro);font-weight:700;margin-bottom:.4rem}
@@ -256,7 +286,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
       <div class="setting"><label>Points / Answer</label>
         <select id="s-pts"><option value="5">5 pts</option><option value="10" selected>10 pts</option><option value="20">20 pts</option></select></div>
       <div class="setting"><label>Question Set</label>
-        <select id="s-set"><option value="all">All Questions</option><option value="hip-hop">Hip-Hop Hits</option><option value="rock">Rock Cross-Over</option><option value="soul">Soul &amp; Funk</option><option value="easy">Easy Mode</option><option value="hard">Hard Mode</option><option value="classical">🎻 Classical</option></select></div>
+        <select id="s-set"><option value="all">All Questions</option><option value="hip-hop">Hip-Hop Hits</option><option value="rock">Rock Cross-Over</option><option value="soul">Soul &amp; Funk</option><option value="easy">Easy Mode</option><option value="hard">Hard Mode</option><option value="classical">🎻 Classical</option><option value="yacht-rock">⛵ Yacht Rock</option></select></div>
       <div class="setting"><label>Rounds to Play</label>
         <select id="s-rounds"><option value="5">5 rounds</option><option value="10">10 rounds</option><option value="15">15 rounds</option><option value="20">20 rounds</option><option value="0" selected>All available</option></select></div>
     </div>
@@ -394,23 +424,35 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 </div>
 
 <!-- ══ RESULTS ══ -->
+<canvas id="results-canvas"></canvas>
 <div id="results" class="screen">
-  <div class="res-card">
-    <div class="res-trophy">🏆</div>
-    <div class="res-title">GAME OVER!</div>
-    <div class="res-winner" id="res-winner"></div>
-    <div class="chart-section">
+  <div class="res-inner">
+    <div class="res-header">
+      <h1>🏆 GAME OVER!</h1>
+    </div>
+    <div class="res-winner-banner" id="res-winner-banner"></div>
+    <div class="horse-race" id="horse-race"></div>
+    <div class="chart-section" style="width:100%;max-width:800px;margin-top:1.5rem">
       <div class="chart-title">📈 Points by Round</div>
       <div class="chart-wrap"><canvas id="score-chart"></canvas></div>
     </div>
+    <div class="res-btns">
+      <button class="btn-tiebreak" onclick="startTiebreaker()">🎯 Tie-Breaker</button>
+      <button class="btn-again" onclick="resetGame()">🔄 Play Again</button>
+    </div>
+    <div class="res-summary-link" onclick="document.getElementById('summary-modal').classList.add('open')">View full stats →</div>
+  </div>
+</div>
+
+<!-- Summary modal -->
+<div class="summary-modal" id="summary-modal">
+  <div class="summary-modal-inner">
+    <button class="summary-close" onclick="document.getElementById('summary-modal').classList.remove('open')">✕</button>
+    <h2>📊 Full Stats</h2>
     <table class="summary-table" id="summary-table">
       <thead><tr><th>Team</th><th>Score</th><th>Correct</th><th>Best Streak</th><th>Bonus</th></tr></thead>
       <tbody id="summary-tbody"></tbody>
     </table>
-    <div class="res-btns">
-      <button class="btn-tiebreak" onclick="startTiebreaker()">🎯 Tie-Breaker Round</button>
-      <button class="btn-again" onclick="resetGame()">🔄 Play Again</button>
-    </div>
   </div>
 </div>
 
@@ -918,6 +960,149 @@ const QUESTIONS = [
     opts:['A Number of Names','Cybotron','Model 500','Kraftwerk'],ans:0,diff:'hard',cat:'hip-hop'
   },
 
+  // ── ⛵ YACHT ROCK (20 questions) ──
+  {
+    modern:{title:'"Eye Know"',artist:'De La Soul',year:1989},
+    original:{title:'Peg',artist:'Steely Dan',year:1977},
+    q:'De La Soul\'s joyful debut single is built around the polished guitar figure from which Steely Dan studio classic — a song so meticulously recorded it took over a year to finish?',
+    hint:'🎸 Producers Walter Becker and Donald Fagen used nine different guitarists before settling on Jay Graydon\'s performance. The guitar tone alone took weeks.',
+    fact:'"Eye Know" (1989) samples "Peg" (1977) from Steely Dan\'s Aja album — one of the most expensive and perfectionist recordings of the era.',
+    opts:['Peg (Steely Dan)','Josie (Steely Dan)','Deacon Blues (Steely Dan)','Rikki Don\'t Lose That Number (Steely Dan)'],ans:0,diff:'hard',cat:'yacht-rock'
+  },{
+    modern:{title:'"Say No Go"',artist:'De La Soul',year:1989},
+    original:{title:'I Can\'t Go for That (No Can Do)',artist:'Hall & Oates',year:1981},
+    q:'De La Soul\'s cautionary tale lifted its hook from which silky Hall & Oates smash that spent two weeks at #1 and outsold every other record in 1982?',
+    hint:'🎹 The original was the first hip-hop influenced pop record to reach #1 — its drum machine groove was years ahead of its time.',
+    fact:'"Say No Go" (1989) samples "I Can\'t Go for That (No Can Do)" (1981). Hall & Oates\' record is still the best-selling single in the history of RCA Records.',
+    opts:['I Can\'t Go for That (No Can Do)','Sara Smile','Maneater','Out of Touch'],ans:0,diff:'hard',cat:'yacht-rock'
+  },{
+    modern:{title:'"Bette Davis Eyes"',artist:'Kim Carnes',year:1981},
+    original:{title:'Bette Davis Eyes',artist:'Jackie DeShannon',year:1974},
+    q:'Kim Carnes\' synth-drenched mega-hit spent 9 weeks at #1 in 1981 — but it was originally recorded by which legendary singer-songwriter seven years earlier?',
+    hint:'🎤 Jackie DeShannon\'s original was a much gentler country-tinged pop song. Kim Carnes and Donna Weiss\'s stripped-down rewrite turned it into a totally different beast.',
+    fact:'"Bette Davis Eyes" was written by DeShannon and Donna Weiss in 1974 but languished until Kim Carnes\'s 1981 recording transformed it into one of the decade\'s defining hits.',
+    opts:['Jackie DeShannon','Linda Ronstadt','Carole King','Carly Simon'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Sailing"',artist:'Rod Stewart',year:1975},
+    original:{title:'Sailing',artist:'The Sutherland Brothers',year:1972},
+    q:'Rod Stewart\'s stadium anthem "Sailing" was a cover — but whose? The original was a quiet folk record by two Scottish brothers that barely dented the charts.',
+    hint:'⛵ The Sutherland Brothers recorded their version in 1972 with little fanfare. Three years later Rod Stewart turned it into a four-week UK #1.',
+    fact:'"Sailing" was written and first recorded by Gavin and Iain Sutherland in 1972. Rod Stewart\'s 1975 version became one of the best-selling singles in UK chart history.',
+    opts:['The Sutherland Brothers','Seals & Crofts','England Dan & John Ford Coley','Loggins & Messina'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"I Write the Songs"',artist:'Barry Manilow',year:1975},
+    original:{title:'I Write the Songs',artist:'Bruce Johnston (The Beach Boys)',year:1975},
+    q:'Barry Manilow won a Grammy for this #1 hit — but he didn\'t write it. Which Beach Boy composed it, reportedly in just 30 minutes, and later said Manilow\'s recording humbled him?',
+    hint:'🎵 The writer said the song "came to him" while driving — he felt he was channelling the spirit of music itself. He also wrote "I Am a Rock" for Simon & Garfunkel.',
+    fact:'"I Write the Songs" was written by Bruce Johnston of The Beach Boys. Barry Manilow\'s 1975 recording won the Grammy for Song of the Year.',
+    opts:['Bruce Johnston','Brian Wilson','Carl Wilson','Mike Love'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Arthur\'s Theme (Best That You Can Do)"',artist:'Christopher Cross',year:1981},
+    original:{title:'Arthur',artist:'Film starring Dudley Moore',year:1981},
+    q:'Christopher Cross won the Academy Award for Best Original Song for this 1981 Yacht Rock gem. It was written for which comedy film starring Dudley Moore as a lovable drunk billionaire?',
+    hint:'🎩 The film\'s tagline was "Have you ever been so happy you almost cried?" The Christopher Cross song captures that bittersweet feeling perfectly.',
+    fact:'"Arthur\'s Theme" won the 1982 Oscar for Best Original Song. The film Arthur starred Dudley Moore opposite Liza Minnelli, and Cross co-wrote the track with four collaborators including Burt Bacharach.',
+    opts:['Arthur','10','Being There','The Muppet Movie'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"Footloose"',artist:'Kenny Loggins',year:1984},
+    original:{title:'Footloose',artist:'Film starring Kevin Bacon',year:1984},
+    q:'Kenny Loggins recorded "Footloose" specifically for the title sequence of which 1984 film — a movie about a town where dancing has been banned?',
+    hint:'🕺 The film launched Kevin Bacon\'s career and spawned the party game "Six Degrees of Kevin Bacon." The song spent three weeks at #1.',
+    fact:'"Footloose" spent three weeks at #1 on the Billboard Hot 100 in 1984. The film\'s premise — a minister banning dancing in a small town — was inspired by a real Oklahoma town.',
+    opts:['Footloose (1984)','Fame (1980)','Flashdance (1983)','Dirty Dancing (1987)'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"Danger Zone"',artist:'Kenny Loggins',year:1986},
+    original:{title:'Top Gun',artist:'Film starring Tom Cruise',year:1986},
+    q:'"Danger Zone" reached #2 on the Billboard Hot 100 and became synonymous with aerial action sequences. Which Tom Cruise blockbuster was it written for?',
+    hint:'✈️ Kenny Loggins was reportedly the fifth or sixth choice for the song — it was turned down by several major artists before he recorded it.',
+    fact:'"Danger Zone" (1986) was written specifically for Top Gun. The song was reportedly offered to Toto and Bryan Adams before Kenny Loggins recorded it. It spent eight weeks on the chart.',
+    opts:['Top Gun','Iron Eagle','Beverly Hills Cop II','Days of Thunder'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"What a Fool Believes"',artist:'The Doobie Brothers',year:1979},
+    original:{title:'What a Fool Believes',artist:'Co-written by Kenny Loggins',year:1978},
+    q:'"What a Fool Believes" won the 1980 Grammys for both Record and Song of the Year. Michael McDonald co-wrote it with which other Yacht Rock legend?',
+    hint:'🎹 The two songwriters wrote this together in 1978. The other writer also had a solo hit the same year with "Whenever I Call You Friend."',
+    fact:'"What a Fool Believes" was co-written by Michael McDonald and Kenny Loggins. It spent one week at #1 and won both Record of the Year and Song of the Year at the 1980 Grammys.',
+    opts:['Kenny Loggins','Christopher Cross','Boz Scaggs','James Taylor'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Baker Street"',artist:'Gerry Rafferty',year:1978},
+    original:{title:'Baker Street Saxophone Solo',artist:'Raphael Ravenscroft (session musician)',year:1978},
+    q:'Gerry Rafferty\'s "Baker Street" is immortal — but so is the eight-bar sax riff that opens it. Which session musician played it, reportedly earning only a £27 flat fee?',
+    hint:'🎷 The musician was paid a standard session rate and signed away all royalties. When the song became a global hit, he received nothing extra — a fact he was bitter about for years.',
+    fact:'Raphael Ravenscroft played the iconic saxophone solo on "Baker Street" (1978) for a one-time fee of £27.50. The song spent six weeks at #2 in the UK and made Ravenscroft inadvertently famous.',
+    opts:['Raphael Ravenscroft','Tom Scott','David Sanborn','Grover Washington Jr.'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Africa"',artist:'Toto',year:1982},
+    original:{title:'Africa (Cover)',artist:'Weezer',year:2018},
+    q:'Toto\'s Grammy-winning "Africa" (1982) got an unexpected second life in 2018 when which rock band recorded a faithful cover after a fan on Twitter relentlessly campaigned for it?',
+    hint:'🌍 The campaign started when a fan created a Twitter account literally called "@WeezerAfrica" and just kept tweeting at the band. It worked.',
+    fact:'Weezer released their cover of "Africa" in 2018 after fan Weezer Africa relentlessly tweeted at them for months. It became Weezer\'s biggest chart hit in decades.',
+    opts:['Weezer','Vampire Weekend','Foster the People','Imagine Dragons'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"Lowdown"',artist:'Boz Scaggs',year:1976},
+    original:{title:'Silk Degrees — featured the future members of Toto',artist:'Boz Scaggs',year:1976},
+    q:'Boz Scaggs\' "Lowdown" from the landmark album Silk Degrees (1976) featured session musicians so talented they went on to form which iconic Yacht Rock band?',
+    hint:'🎸 The session players on Silk Degrees included David Paich, Jeff Porcaro, David Hungate, and Steve Lukather — who together created a new band the following year.',
+    fact:'"Lowdown" and the Silk Degrees album (1976) featured future Toto members David Paich, Jeff Porcaro, David Hungate, and Steve Lukather as session players — the record essentially assembled Toto before they existed.',
+    opts:['Toto','Steely Dan','The Doobie Brothers','Ambrosia'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Escape (The Piña Colada Song)"',artist:'Rupert Holmes',year:1979},
+    original:{title:'Last #1 of the 1970s / First #1 of the 1980s',artist:'Rupert Holmes',year:1979},
+    q:'"Escape (The Piña Colada Song)" holds a unique chart distinction: it was the last #1 single of the 1970s AND the first #1 of the 1980s. How long did it sit at #1?',
+    hint:'🍹 The song describes a man who answers his wife\'s personal ad — only to realize she\'s the woman he already lives with. It\'s simultaneously about infidelity and fidelity.',
+    fact:'"Escape" entered the Hot 100 at #1 on December 22, 1979 — still 1979 — and remained there into January 1980, making it the bookend hit of the decade transition.',
+    opts:['Three weeks','One week','Six weeks','Five weeks'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"What You Won\'t Do for Love"',artist:'Bobby Caldwell',year:1978},
+    original:{title:'Hidden Identity',artist:'Bobby Caldwell\'s Label TK Records',year:1978},
+    q:'Bobby Caldwell\'s soulful debut hit the R&B Top 10 in 1978 — but his label hid his photo on the album cover to avoid revealing a fact they feared would hurt sales. What was it?',
+    hint:'🎤 Bobby Caldwell\'s rich, warm vocal sounded so authentically soulful that R&B radio stations assumed he was Black and programmed the record accordingly.',
+    fact:'Bobby Caldwell is white, and TK Records deliberately hid his photo fearing R&B radio would boycott a white soul singer. The deception worked — the song reached #9 on the R&B chart.',
+    opts:['He is white and the label feared R&B radio rejection','He was only 16 years old','He was in the military and couldn\'t tour','He refused all publicity'],ans:0,diff:'hard',cat:'yacht-rock'
+  },{
+    modern:{title:'"Sailing"',artist:'Christopher Cross',year:1980},
+    original:{title:'Four Major Grammy Categories Won in One Night',artist:'Christopher Cross',year:1981},
+    q:'Christopher Cross became the first artist to win all four major Grammy categories in a single night at the 1981 ceremony. Record, Album, Song, and Best New Artist — all in one sweep. Which album won him Album of the Year?',
+    hint:'🏆 No artist had ever won all four major categories before Christopher Cross did it. His debut album was produced with a level of studio craft that defined Yacht Rock at its peak.',
+    fact:'Christopher Cross\'s self-titled debut album (1979) won Album of the Year at the 1981 Grammys. He is still the only artist to have won all four General Field Grammys at the same ceremony.',
+    opts:['Christopher Cross (self-titled debut)','Another Page','Walking in Avalon','Back of My Hand'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Minute by Minute"',artist:'The Doobie Brothers',year:1978},
+    original:{title:'Minute by Minute — Michael McDonald era transformation',artist:'Michael McDonald replaced Tom Johnston',year:1977},
+    q:'"Minute by Minute" signalled the Doobie Brothers\' transformation from country-rock into Yacht Rock royalty. Which new lead vocalist took over after founding member Tom Johnston left due to illness?',
+    hint:'🎹 The new vocalist\'s blue-eyed soul style was so different from the original band that many fans felt it was an entirely new group. It won the Grammy for Album of the Year.',
+    fact:'Michael McDonald joined the Doobie Brothers in 1975 after Tom Johnston\'s illness. His Fender Rhodes-driven, soul-influenced sound completely changed the band — "Minute by Minute" (1978) won the Album of the Year Grammy.',
+    opts:['Michael McDonald','Kenny Loggins','Christopher Cross','James Taylor'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Rosanna"',artist:'Toto',year:1982},
+    original:{title:'Allegedly written about Rosanna Arquette',artist:'Toto (guitarist Steve Lukather\'s girlfriend)',year:1982},
+    q:'Toto\'s Grammy-winning "Rosanna" is said to have been written about which actress, who was dating guitarist Steve Lukather at the time of recording?',
+    hint:'🎬 The actress went on to star in Desperately Seeking Susan (1985), After Hours (1985), and Pulp Fiction (1994). She had no idea a Grammy-winning smash was written in her honour.',
+    fact:'"Rosanna" (1982) was allegedly written about Rosanna Arquette. The song won the Grammy for Record of the Year and its drum pattern — the "Rosanna Shuffle" — became one of the most studied grooves in music.',
+    opts:['Rosanna Arquette','Patricia Arquette','Jennifer Jason Leigh','Ally Sheedy'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"Rich Girl"',artist:'Hall & Oates',year:1977},
+    original:{title:'Rich Girl — originally written about a man',artist:'Daryl Hall',year:1976},
+    q:'Hall & Oates\' first #1 hit "Rich Girl" (1977) has a secret: despite the title, Daryl Hall originally wrote it about a man. What was the original lyric\'s subject?',
+    hint:'💰 The man in question was the ex-boyfriend of Hall\'s girlfriend at the time — a wealthy heir who could coast through life on family money without consequences.',
+    fact:'"Rich Girl" was originally "Rich Boy" — written about the wealthy heir to a fast-food chain fortune. Daryl Hall changed the gender before recording and it became Hall & Oates\' first #1 single.',
+    opts:['His girlfriend\'s wealthy male ex','Richard Nixon','A record label executive','His college roommate'],ans:0,diff:'medium',cat:'yacht-rock'
+  },{
+    modern:{title:'"Maneater"',artist:'Hall & Oates',year:1982},
+    original:{title:'Maneater — inspired by the New York social scene',artist:'Hall, Oates & Sara Allen',year:1982},
+    q:'"Maneater" spent four weeks at #1 in 1982 and features one of the most iconic saxophone intros of the decade. Which animal does the song\'s narrator warn listeners about in the opening line?',
+    hint:'🦁 The song opens with a cautionary line about a predator "on the street." Despite its pop gloss, the lyric describes a ruthless, calculating personality.',
+    fact:'"Maneater" (1982) opens with "Watch out, boy, she\'ll chew you up." Hall & Oates said the song was inspired by the aggressive social-climbing culture of New York City\'s elite scene in the early 80s.',
+    opts:['A woman / the maneater herself','A lion on the street','A shark in the water','A wolf in sheep\'s clothing'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"Key Largo"',artist:'Bertie Higgins',year:1981},
+    original:{title:'Key Largo',artist:'Humphrey Bogart & Lauren Bacall film (1948)',year:1948},
+    q:'Bertie Higgins\' 1981 Yacht Rock hit "Key Largo" directly references a 1948 Humphrey Bogart film-noir classic by the same name. The song opens: "We had it all just like ______."',
+    hint:'🎬 Bogie and Bacall made four films together. The one referenced in this song involves gangsters, a Florida Keys hotel, and a hurricane. Their chemistry was legendary.',
+    fact:'"Key Largo" (1981) references the 1948 film of the same name starring Humphrey Bogart and Lauren Bacall. Bertie Higgins said the song was about longing for a lost relationship — using old Hollywood as a metaphor.',
+    opts:['Bogie and Bacall','Fred and Ginger','Spencer and Kate','Paul and Joanne'],ans:0,diff:'medium',cat:'yacht-rock'
+  },
+
   // ── CLASSICAL (4 more) ──
   {
     modern:{title:'"Adagio for Strings"',artist:'DJ Tiësto',year:2004},
@@ -1231,7 +1416,7 @@ function clearEmbed() { document.getElementById('mp-embed').style.display='none'
 const COLORS=['#f72585','#4cc9f0','#7bed9f','#ffd60a','#ff6b35','#b185db','#00f5d4','#ff6b6b','#06d6a0','#118ab2','#ef476f','#ffd166','#3a86ff','#8338ec','#fb5607'];
 const BANDS=[{name:'Fleetwood Mac',icon:'🌙'},{name:'The Eagles',icon:'🦅'},{name:'ABBA',icon:'💃'},{name:'Led Zeppelin',icon:'🚀'},{name:'Queen',icon:'♛'},{name:'The Police',icon:'🎸'},{name:'Blondie',icon:'⚡'},{name:'Talking Heads',icon:'🗣'},{name:'Heart',icon:'♥'},{name:'Bee Gees',icon:'🕺'},{name:'Earth Wind & Fire',icon:'🔥'},{name:'The Cars',icon:'🚗'},{name:'Van Halen',icon:'🤘'},{name:'Duran Duran',icon:'DD'},{name:"The Go-Go's",icon:'GG'}];
 const DIFF_INFO={easy:{color:'#7bed9f',label:'🟢 Easy'},medium:{color:'#ffd60a',label:'🟡 Medium'},hard:{color:'#f72585',label:'🔴 Hard'}};
-const CAT_INFO={'hip-hop':{cls:'cat-hip-hop',label:'Hip-Hop'},rock:{cls:'cat-rock',label:'Rock'},soul:{cls:'cat-soul',label:'Soul & Funk'},classical:{cls:'cat-classical',label:'🎻 Classical'}};
+const CAT_INFO={'hip-hop':{cls:'cat-hip-hop',label:'Hip-Hop'},rock:{cls:'cat-rock',label:'Rock'},soul:{cls:'cat-soul',label:'Soul & Funk'},classical:{cls:'cat-classical',label:'🎻 Classical'},'yacht-rock':{cls:'cat-yacht-rock',label:'⛵ Yacht Rock'}};
 
 let G = {};
 
@@ -1281,7 +1466,8 @@ function startGame() {
   else if (set==='soul')  qs=qs.filter(q=>q.cat==='soul');
   else if (set==='easy')  qs=qs.filter(q=>q.diff==='easy');
   else if (set==='hard')       qs=qs.filter(q=>q.diff!=='easy');
-  else if (set==='classical')  qs=qs.filter(q=>q.cat==='classical');
+  else if (set==='classical')   qs=qs.filter(q=>q.cat==='classical');
+  else if (set==='yacht-rock')  qs=qs.filter(q=>q.cat==='yacht-rock');
   qs.sort(()=>Math.random()-.5);                       // random question order each game
   const rounds=parseInt(document.getElementById('s-rounds').value);
   if (rounds>0) qs=qs.slice(0,Math.min(rounds,qs.length));
@@ -1520,19 +1706,20 @@ function getRoundMultiplier(idx, total) {
 }
 
 function endGame() {
-  stopTimer(); stopAudio(); SFX.gameOver();
+  stopTimer(); stopAudio();
   document.getElementById('overlay').classList.remove('visible');
-  // Always snapshot final scores — deduplicate if nextQ already pushed last round
   const finalSnap = G.teams.map(t => t.score);
   const prev = G.chartData[G.chartData.length - 1];
-  if (!prev || finalSnap.some((s, i) => s !== prev[i])) {
-    G.chartData.push(finalSnap);
-  }
-  const sorted=[...G.teams].sort((a,b)=>b.score-a.score);
-  document.getElementById('res-winner').textContent=`🎉 ${sorted[0].name} wins!`;
-  const ranks=['gold','silver','bronze'];
-  const tbody=document.getElementById('summary-tbody');
-  tbody.innerHTML=sorted.map((t,i)=>`
+  if (!prev || finalSnap.some((s,i) => s !== prev[i])) G.chartData.push(finalSnap);
+
+  const sorted   = [...G.teams].sort((a,b) => b.score - a.score);
+  const winner   = sorted[0];
+  const maxScore = Math.max(...sorted.map(t => t.score), 1);
+  const band     = BANDS.find(b => b.name === winner.name) || { icon: '🏆' };
+
+  // Summary table (in modal)
+  const ranks = ['gold','silver','bronze'];
+  document.getElementById('summary-tbody').innerHTML = sorted.map((t,i) => `
     <tr>
       <td><span class="rank-chip ${ranks[i]||''}">${i+1}</span><span style="color:${t.color}">${t.name}</span></td>
       <td><strong style="color:${t.color}">${t.score}</strong></td>
@@ -1540,8 +1727,85 @@ function endGame() {
       <td>${t.maxStreak>0?'🔥'.repeat(Math.min(t.maxStreak,5))+` ${t.maxStreak}×`:'-'}</td>
       <td>${t.bonus>0?`+${t.bonus}`:'-'}</td>
     </tr>`).join('');
+
+  // Horse-race rows — bars start at 0, animate after paint
+  document.getElementById('horse-race').innerHTML = sorted.map((t,i) => `
+    <div class="horse-row">
+      <div class="horse-rank">${['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'][i]||i+1}</div>
+      <div class="horse-name" style="color:${t.color}">${t.name}</div>
+      <div class="horse-track">
+        <div class="horse-bar${i===0?' winner-bar':''}" id="hbar-${i}"
+             style="background:${t.color};color:${t.color}">
+          <span class="horse-score" id="hscore-${i}">${t.score} pts</span>
+        </div>
+      </div>
+    </div>`).join('');
+
   showScreen('results');
-  setTimeout(renderChart, 250); // wait for screen to paint before sizing the canvas
+
+  // Trigger all bars simultaneously after browser paints
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    sorted.forEach((t,i) => {
+      document.getElementById(`hbar-${i}`).style.width = `${(t.score/maxScore)*96}%`;
+      setTimeout(() => document.getElementById(`hscore-${i}`).classList.add('show'), 600);
+    });
+    // Winner reveal after bars finish
+    setTimeout(() => {
+      const banner = document.getElementById('res-winner-banner');
+      banner.textContent = `${band.icon}  ${winner.name.toUpperCase()} WINS! 🎉`;
+      banner.classList.add('show');
+      SFX.gameOver();
+      launchConfetti(winner.color);
+    }, 2500);
+    setTimeout(renderChart, 400);
+  }));
+}
+
+// ── CONFETTI ENGINE ──────────────────────────────────────
+function launchConfetti(winnerColor) {
+  const canvas = document.getElementById('results-canvas');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx    = canvas.getContext('2d');
+  const cols   = [winnerColor,'#ffd60a','#f72585','#00f5d4','#7bed9f','#ff6b35','#b185db','#ffffff'];
+
+  [0, 400, 900].forEach(delay => setTimeout(() => spawnBurst(), delay));
+
+  function spawnBurst() {
+    const pts = Array.from({length:130}, () => ({
+      x:     Math.random() * canvas.width,
+      y:     canvas.height * (-0.05 - Math.random() * 0.25),
+      vx:    (Math.random() - 0.5) * 7,
+      vy:    Math.random() * 4 + 1,
+      size:  Math.random() * 10 + 4,
+      color: cols[Math.floor(Math.random() * cols.length)],
+      rot:   Math.random() * 360,
+      rotV:  (Math.random() - 0.5) * 10,
+      shape: Math.random() > 0.4 ? 'rect' : 'circle',
+      alpha: 1
+    }));
+    (function tick() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let live = false;
+      pts.forEach(p => {
+        if (p.alpha <= 0) return;
+        live = true;
+        p.x += p.vx; p.y += p.vy; p.vy += 0.09;
+        p.rot += p.rotV;
+        if (p.y > canvas.height * 0.72) p.alpha -= 0.02;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        if (p.shape === 'rect') ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+        else { ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
+        ctx.restore();
+      });
+      if (live) requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    })();
+  }
 }
 
 // ════════════════════════════════════════
