@@ -1717,6 +1717,8 @@ document.getElementById('add-btn').addEventListener('click',()=>{ const rows=doc
 
 function startGame() {
   unlockAudio(); // must run inside click handler BEFORE any async work
+  document.getElementById('mp-pause-btn').style.display = 'inline-block';
+  GAME_PAUSED = false;
   const rows=document.querySelectorAll('.team-row');
   const teams=[];
   rows.forEach((r,i)=>{
@@ -2214,7 +2216,12 @@ function downloadGame() { // kept as stub — not exposed in UI
 // SCREEN MANAGEMENT
 // ════════════════════════════════════════
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function resetGame() { showScreen('setup'); }
+function resetGame() {
+  document.getElementById('mp-pause-btn').style.display = 'none';
+  hidePauseOverlay();
+  GAME_PAUSED = false;
+  showScreen('setup');
+}
 
 // ════════════════════════════════════════
 // RUMOURS ALBUM ART BACKGROUND
