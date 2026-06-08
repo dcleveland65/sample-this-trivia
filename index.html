@@ -556,6 +556,24 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
   </div>
 </div>
 
+<!-- ── GUEST LIVE SCOREBOARD ── -->
+<div id="guest-scoreboard" class="screen" style="background:radial-gradient(ellipse at top,rgba(26,10,46,.6),rgba(13,13,26,.5) 60%)">
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,var(--retro),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">🎵 SAMPLE THIS!</span>
+    <span id="gs-room-code" style="background:rgba(0,245,212,.1);border:1px solid var(--neon);color:var(--neon);border-radius:6px;padding:.3rem .75rem;font-size:.85rem;font-weight:700;letter-spacing:2px"></span>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem;max-width:480px;margin:0 auto;width:100%">
+    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:3px;color:#555;margin-bottom:1.5rem">🏆 Live Scoreboard</div>
+    <div id="gs-rows" style="width:100%"></div>
+    <div style="margin-top:2rem;font-size:.82rem;color:#444;text-align:center;line-height:1.7">
+      Scores update the moment the host awards points.<br>Watch the main screen for questions.
+    </div>
+    <div id="gs-ended-msg" style="display:none;margin-top:1.5rem;background:rgba(0,245,212,.1);border:1px solid var(--neon);border-radius:12px;padding:1rem 1.5rem;text-align:center;color:var(--neon);font-weight:700">
+      🏁 Game over — check the host's screen for results!
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════
 // QUESTION BANK (28 questions)
@@ -2285,9 +2303,13 @@ function cancelLobby() {
 
 function startGameFromLobby() {
   if (!ROOM) return;
-  DB.ref(`rooms/${ROOM}/status`).set('playing');
   document.getElementById('lobby-overlay').classList.remove('open');
   document.getElementById('mp-pause-btn').style.display = 'inline-block';
+  startGame(); // start the game on the host's device
+  // Notify guests after G is initialised (short delay)
+  setTimeout(() => {
+    if (DB && ROOM) DB.ref(`rooms/${ROOM}/status`).set('playing');
+  }, 300);
 }
 
 // ── GUEST: JOIN ROOM + WAIT FOR START ────────────────────
@@ -2326,11 +2348,19 @@ async function joinOnlineRoom() {
     if (status === 'playing') {
       document.getElementById('gw-status-text').textContent = '🎮 Game started!';
       document.getElementById('gw-spinner').style.display = 'none';
-      setTimeout(() => document.getElementById('guest-waiting').classList.remove('open'), 800);
+      setTimeout(() => {
+        document.getElementById('guest-waiting').classList.remove('open');
+        // Show the guest live-scoreboard screen
+        document.getElementById('gs-room-code').textContent = code;
+        showScreen('guest-scoreboard');
+      }, 800);
     }
     if (status === 'paused')  showPauseOverlay(false);
-    if (status === 'playing') hidePauseOverlay();
-    if (status === 'ended')   document.getElementById('guest-waiting').classList.remove('open');
+    if (status === 'playing' && document.getElementById('guest-scoreboard').classList.contains('active')) hidePauseOverlay();
+    if (status === 'ended') {
+      document.getElementById('guest-waiting').classList.remove('open');
+      document.getElementById('gs-ended-msg').style.display = 'block';
+    }
   });
 
   // Mirror scoreboard in real time
@@ -2353,9 +2383,24 @@ function leaveRoom() {
 function subscribeGuest(code) {
   DB.ref(`rooms/${code}/state`).on('value', snap => {
     const s = snap.val();
-    if (!s || !G.teams) return;
-    s.teams.forEach((srv,i) => { if (G.teams[i]) G.teams[i].score = srv.score; });
-    renderSB();
+    if (!s) return;
+    // Update host scoreboard if game is running on this device
+    if (G.teams) {
+      s.teams.forEach((srv,i) => { if (G.teams[i]) G.teams[i].score = srv.score; });
+      renderSB();
+    }
+    // Always update guest scoreboard screen
+    const gs = document.getElementById('gs-rows');
+    if (gs && s.teams) {
+      const sorted = [...s.teams].sort((a,b) => b.score - a.score);
+      gs.innerHTML = sorted.map((t,i) => `
+        <div style="display:flex;align-items:center;gap:.75rem;background:rgba(255,255,255,.05);border-radius:10px;padding:.75rem 1rem;margin-bottom:.5rem">
+          <div style="font-size:1.2rem">${['🥇','🥈','🥉'][i]||i+1}</div>
+          <div style="flex:1;font-weight:700;color:${t.color}">${t.name}</div>
+          <div style="font-size:1.3rem;font-weight:900;color:${t.color}">${t.score}</div>
+        </div>`).join('');
+    }
+    // Live badge pulse
     const badge = document.getElementById('live-badge');
     if (badge) { badge.style.display='inline-block'; badge.style.opacity='1'; setTimeout(()=>badge.style.opacity='.4',600); }
   });
