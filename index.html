@@ -56,6 +56,14 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .logo{text-align:center;margin-bottom:2rem}
 .logo h1{font-size:clamp(2.5rem,8vw,5.5rem);font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#ff6b35 0%,#f72585 50%,#00f5d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
 .logo .sub{color:#777;font-size:.95rem;margin-top:.4rem;letter-spacing:5px;text-transform:uppercase}
+.q-burst{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:76px;height:76px;background:var(--gold);color:#000;font-weight:900;margin-top:.9rem;
+  clip-path:polygon(50% 0%,59% 30%,88% 12%,73% 39%,100% 45%,76% 60%,91% 87%,62% 70%,53% 100%,44% 71%,15% 90%,27% 61%,0% 47%,28% 40%,11% 13%,41% 30%);
+  animation:burst-idle 3s ease-in-out infinite}
+.q-burst-num{font-size:1.45rem;line-height:1.1}
+.q-burst-lbl{font-size:.42rem;text-transform:uppercase;letter-spacing:1.5px;opacity:.7}
+@keyframes burst-idle{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.06) rotate(3deg)}}
+.q-burst.pop{animation:burst-pop .35s cubic-bezier(.175,.885,.32,1.275) forwards}
+@keyframes burst-pop{0%{transform:scale(1)}50%{transform:scale(1.3) rotate(-5deg)}100%{transform:scale(1) rotate(0deg)}}
 .setup-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:600px}
 .setup-card h2{font-size:1.3rem;margin-bottom:1.25rem;color:var(--neon)}
 .team-inputs{display:flex;flex-direction:column;gap:.65rem}
@@ -359,7 +367,14 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 
 <!-- ══ SETUP ══ -->
 <div id="setup" class="screen active">
-  <div class="logo"><h1>SAMPLE THIS!</h1><div class="sub">70s &amp; 80s Music Trivia</div></div>
+  <div class="logo">
+    <h1>SAMPLE THIS!</h1>
+    <div class="sub">70s &amp; 80s Music Trivia</div>
+    <div class="q-burst" id="q-burst">
+      <span class="q-burst-num" id="q-burst-num">0</span>
+      <span class="q-burst-lbl">songs</span>
+    </div>
+  </div>
   <div class="setup-card">
     <h2>🎮 Game Setup</h2>
     <div class="team-inputs" id="team-inputs"></div>
@@ -1706,9 +1721,34 @@ let G = {};
 function setDiff(btn) {
   document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  updateBurst();
 }
 
-function initSetup() { renderTeams([{},{},{}]); }
+function updateBurst() {
+  const set  = document.getElementById('s-set')?.value || 'all';
+  const diff = document.querySelector('.diff-btn.active')?.dataset?.diff || 'all';
+  let qs = [...QUESTIONS];
+  if (set==='hip-hop')    qs=qs.filter(q=>q.cat==='hip-hop');
+  else if (set==='rock')  qs=qs.filter(q=>q.cat==='rock');
+  else if (set==='soul')  qs=qs.filter(q=>q.cat==='soul');
+  else if (set==='classical')  qs=qs.filter(q=>q.cat==='classical');
+  else if (set==='yacht-rock') qs=qs.filter(q=>q.cat==='yacht-rock');
+  if (diff==='easy') qs=qs.filter(q=>q.diff==='easy');
+  else if (diff==='hard') qs=qs.filter(q=>q.diff!=='easy');
+  const burst=document.getElementById('q-burst');
+  if (!burst) return;
+  document.getElementById('q-burst-num').textContent=qs.length;
+  burst.classList.remove('pop');
+  void burst.offsetWidth;
+  burst.classList.add('pop');
+  setTimeout(()=>burst.classList.remove('pop'),400);
+}
+
+function initSetup() {
+  renderTeams([{},{},{}]);
+  document.getElementById('s-set').addEventListener('change', updateBurst);
+  updateBurst();
+}
 function renderTeams(teams) { const c=document.getElementById('team-inputs'); c.innerHTML=''; teams.forEach((t,i)=>addTeamRow(t.name,i)); }
 function addTeamRow(name, i) {
   const c=document.getElementById('team-inputs');
