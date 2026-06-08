@@ -71,6 +71,11 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .setting{flex:1;min-width:130px}
 .setting label{display:block;font-size:.78rem;color:#777;margin-bottom:.35rem;text-transform:uppercase;letter-spacing:1px}
 .setting select,.setting input[type=checkbox]{background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:100%}
+.diff-btn-group{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.diff-btn{flex:1;padding:.5rem .25rem;background:var(--dark);border:none;color:#555;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .15s}
+.diff-btn:not(:last-child){border-right:1px solid var(--border)}
+.diff-btn:hover{color:#aaa;background:rgba(255,255,255,.04)}
+.diff-btn.active{background:var(--card);color:#fff}
 .speed-toggle{display:flex;align-items:center;gap:.6rem;margin-top:1.25rem;padding:.75rem 1rem;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.25);border-radius:10px;cursor:pointer}
 .speed-toggle input{width:auto;padding:0}
 .speed-toggle span{font-size:.9rem;color:var(--retro)}
@@ -365,9 +370,17 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
       <div class="setting"><label>Points / Answer</label>
         <select id="s-pts"><option value="5">5 pts</option><option value="10" selected>10 pts</option><option value="20">20 pts</option></select></div>
       <div class="setting"><label>Question Set</label>
-        <select id="s-set"><option value="all">All Questions</option><option value="hip-hop">Hip-Hop Hits</option><option value="rock">Rock Cross-Over</option><option value="soul">Soul &amp; Funk</option><option value="easy">Easy Mode</option><option value="hard">Hard Mode</option><option value="classical">🎻 Classical</option><option value="yacht-rock">⛵ Yacht Rock</option></select></div>
+        <select id="s-set"><option value="all">All Questions</option><option value="hip-hop">Hip-Hop Hits</option><option value="rock">Rock Cross-Over</option><option value="soul">Soul &amp; Funk</option><option value="classical">🎻 Classical</option><option value="yacht-rock">⛵ Yacht Rock</option></select></div>
       <div class="setting"><label>Rounds to Play</label>
         <select id="s-rounds"><option value="5">5 rounds</option><option value="10">10 rounds</option><option value="15">15 rounds</option><option value="20">20 rounds</option><option value="0" selected>All available</option></select></div>
+    </div>
+    <div style="margin-top:1rem">
+      <div style="font-size:.78rem;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">Difficulty</div>
+      <div class="diff-btn-group">
+        <button class="diff-btn active" data-diff="all" onclick="setDiff(this)">All</button>
+        <button class="diff-btn" data-diff="easy" onclick="setDiff(this)">🟢 Easy</button>
+        <button class="diff-btn" data-diff="hard" onclick="setDiff(this)">🔴 Med + Hard</button>
+      </div>
     </div>
     <label class="speed-toggle"><input type="checkbox" id="s-speed"> <span>⚡ Speed Round Mode — 15 sec timer, double points on all questions</span></label>
     <button class="btn-start" onclick="startGame()">🎵 Let's Play!</button>
@@ -1690,6 +1703,11 @@ let G = {};
 // ════════════════════════════════════════
 // SETUP
 // ════════════════════════════════════════
+function setDiff(btn) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 function initSetup() { renderTeams([{},{},{}]); }
 function renderTeams(teams) { const c=document.getElementById('team-inputs'); c.innerHTML=''; teams.forEach((t,i)=>addTeamRow(t.name,i)); }
 function addTeamRow(name, i) {
@@ -1733,10 +1751,12 @@ function startGame() {
   if (set==='hip-hop') qs=qs.filter(q=>q.cat==='hip-hop');
   else if (set==='rock')  qs=qs.filter(q=>q.cat==='rock');
   else if (set==='soul')  qs=qs.filter(q=>q.cat==='soul');
-  else if (set==='easy')  qs=qs.filter(q=>q.diff==='easy');
-  else if (set==='hard')       qs=qs.filter(q=>q.diff!=='easy');
   else if (set==='classical')   qs=qs.filter(q=>q.cat==='classical');
   else if (set==='yacht-rock')  qs=qs.filter(q=>q.cat==='yacht-rock');
+  // Apply difficulty filter (separate from category)
+  const diff = document.querySelector('.diff-btn.active')?.dataset?.diff || 'all';
+  if (diff==='easy') qs=qs.filter(q=>q.diff==='easy');
+  else if (diff==='hard') qs=qs.filter(q=>q.diff!=='easy');
   qs.sort(()=>Math.random()-.5);                       // random question order each game
   const rounds=parseInt(document.getElementById('s-rounds').value);
   if (rounds>0) qs=qs.slice(0,Math.min(rounds,qs.length));
