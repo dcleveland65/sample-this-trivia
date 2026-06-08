@@ -4,6 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sample This! — 70s &amp; 80s Music Trivia</title>
+<!-- ── HOST LOBBY ── -->
+<div class="lobby-overlay" id="lobby-overlay">
+  <div class="lobby-card">
+    <div class="lobby-title">🎮 Game Lobby</div>
+    <div class="lobby-code" id="lobby-code-display"></div>
+    <div class="lobby-code-hint">Share this code — players open the game URL and enter it</div>
+    <div class="lobby-players-label">Connected Players <span id="lobby-count" style="color:var(--neon)">0</span></div>
+    <div class="lobby-players-grid" id="lobby-players-grid">
+      <span class="lobby-empty">Waiting for players to join…</span>
+    </div>
+    <button class="lobby-start-btn" onclick="startGameFromLobby()">▶ Start Game</button>
+    <button class="lobby-cancel-btn" onclick="cancelLobby()">Cancel Room</button>
+  </div>
+</div>
+
+<!-- ── GUEST WAITING ROOM ── -->
+<div class="guest-waiting" id="guest-waiting">
+  <div class="gw-logo">🎵 SAMPLE THIS!</div>
+  <div style="font-size:.85rem;color:#666;margin-bottom:.25rem">Room</div>
+  <div class="gw-code" id="gw-code-display"></div>
+  <div class="gw-status" id="gw-status-text">✅ Connected — waiting for host to start…</div>
+  <div class="gw-spinner"><div class="gw-dot"></div><div class="gw-dot"></div><div class="gw-dot"></div></div>
+  <div class="gw-players-label">In this room</div>
+  <div class="gw-players-list" id="gw-players-list"></div>
+  <button class="gw-leave-btn" onclick="leaveRoom()">Leave Room</button>
+</div>
+
+<!-- ── PAUSE OVERLAY (shown on ALL devices when host pauses) ── -->
+<div class="pause-overlay" id="pause-overlay">
+  <div class="pause-icon">⏸</div>
+  <div class="pause-title">Game Paused</div>
+  <div class="pause-sub" id="pause-sub">Waiting for the host to resume…</div>
+  <button class="pause-resume-btn" id="pause-resume-btn" onclick="resumeGame()" style="display:none">▶ Resume Game</button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -83,6 +118,53 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .bar.speed{background:var(--retro)}
 .btn-pause{background:var(--border);border:none;color:#fff;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:1rem;transition:background .15s}
 .btn-pause:hover{background:#3a3a5a}
+
+/* ── LOBBY OVERLAY ── */
+.lobby-overlay{display:none;position:fixed;inset:0;background:rgba(8,6,18,.96);z-index:500;align-items:center;justify-content:center;padding:1.5rem}
+.lobby-overlay.open{display:flex}
+.lobby-card{background:var(--card);border:2px solid var(--neon);border-radius:24px;padding:2.5rem;max-width:540px;width:100%;text-align:center;animation:popIn .35s cubic-bezier(.175,.885,.32,1.275)}
+.lobby-title{font-size:1.1rem;font-weight:700;color:var(--neon);text-transform:uppercase;letter-spacing:3px;margin-bottom:.5rem}
+.lobby-code{font-size:4rem;font-weight:900;letter-spacing:12px;color:var(--gold);line-height:1;margin:.5rem 0}
+.lobby-code-hint{font-size:.8rem;color:#666;margin-bottom:1.75rem}
+.lobby-players-label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:.75rem}
+.lobby-players-grid{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;min-height:2.5rem;margin-bottom:1.75rem}
+.player-chip{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:20px;padding:.35rem .85rem;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.4rem;animation:popIn .25s ease}
+.player-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--neon);animation:pulse-dot 1.5s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.lobby-empty{color:#444;font-size:.88rem;font-style:italic}
+.lobby-start-btn{width:100%;padding:1rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border:none;border-radius:12px;font-size:1.15rem;font-weight:900;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:filter .15s;margin-bottom:.75rem}
+.lobby-start-btn:hover{filter:brightness(1.1)}
+.lobby-cancel-btn{background:none;border:none;color:#555;font-size:.85rem;cursor:pointer;text-decoration:underline}
+.lobby-cancel-btn:hover{color:#aaa}
+
+/* ── GUEST WAITING OVERLAY ── */
+.guest-waiting{display:none;position:fixed;inset:0;background:rgba(8,6,18,.96);z-index:500;align-items:center;justify-content:center;padding:1.5rem;flex-direction:column;text-align:center}
+.guest-waiting.open{display:flex}
+.gw-logo{font-size:2.5rem;font-weight:900;background:linear-gradient(135deg,#ff6b35,#f72585,#00f5d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem}
+.gw-code{font-size:3rem;font-weight:900;letter-spacing:10px;color:var(--gold);margin:.5rem 0 .25rem}
+.gw-status{font-size:1rem;color:var(--neon);margin-bottom:2rem}
+.gw-spinner{display:flex;gap:.4rem;justify-content:center;margin-bottom:2rem}
+.gw-dot{width:10px;height:10px;border-radius:50%;background:var(--neon);animation:gw-bounce .9s ease-in-out infinite}
+.gw-dot:nth-child(2){animation-delay:.15s}
+.gw-dot:nth-child(3){animation-delay:.3s}
+@keyframes gw-bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-8px);opacity:1}}
+.gw-players-label{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:.6rem}
+.gw-players-list{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;max-width:400px}
+.gw-leave-btn{margin-top:2rem;background:none;border:1px solid #333;color:#555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.82rem}
+.gw-leave-btn:hover{border-color:#666;color:#aaa}
+
+/* ── PAUSE OVERLAY ── */
+.pause-overlay{display:none;position:fixed;inset:0;background:rgba(8,6,18,.92);z-index:600;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.pause-overlay.open{display:flex}
+.pause-icon{font-size:5rem;margin-bottom:1rem;animation:blink .8s ease-in-out infinite}
+.pause-title{font-size:2.5rem;font-weight:900;color:#fff;margin-bottom:.5rem}
+.pause-sub{font-size:1rem;color:#666;margin-bottom:2rem}
+.pause-resume-btn{background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border:none;border-radius:12px;padding:1rem 3rem;font-size:1.1rem;font-weight:900;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+
+/* ── HOST PAUSE BUTTON ── */
+.btn-pause-mp{background:transparent;border:1px solid var(--border);color:#aaa;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .15s}
+.btn-pause-mp:hover{border-color:var(--gold);color:var(--gold)}
+.btn-pause-mp.paused{border-color:var(--neon);color:var(--neon)}
 
 /* Speed round badge */
 .speed-badge{display:none;align-items:center;gap:.4rem;background:rgba(255,107,53,.15);border:1px solid var(--retro);border-radius:8px;padding:.35rem .75rem;font-size:.8rem;font-weight:700;color:var(--retro)}
@@ -296,7 +378,8 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
       <p style="font-size:.82rem;color:#aaa;margin-bottom:.85rem">Create a room — share the 5-letter code — every device sees scores update in real time.</p>
       <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center" id="join-row">
         <button onclick="createOnlineRoom()" style="background:var(--neon);color:#000;border:none;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;font-size:.9rem">+ Create Room</button>
-        <input id="join-code-in" maxlength="5" placeholder="Room code…" style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:110px;text-transform:uppercase;letter-spacing:3px">
+        <input id="join-name-in" maxlength="20" placeholder="Your name…" style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.9rem;outline:none;width:110px">
+        <input id="join-code-in" maxlength="5" placeholder="Code…" style="background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;color:#fff;font-size:.95rem;outline:none;width:80px;text-transform:uppercase;letter-spacing:3px">
         <button onclick="joinOnlineRoom()" style="background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.55rem 1rem;font-weight:700;cursor:pointer;font-size:.9rem">Join →</button>
       </div>
       <div id="room-created-msg" style="display:none;margin-top:.85rem">
@@ -327,6 +410,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
       <span style="font-size:.72rem;color:#555" id="q-remain">17 remaining</span>
     </div>
     <div class="header-right">
+      <button class="btn-pause-mp" id="mp-pause-btn" onclick="togglePause()" style="display:none">⏸ Pause</button>
       <button class="btn-mute" id="mute-btn" onclick="toggleMute()" title="Toggle SFX">🔊</button>
       <button class="btn-end" onclick="confirmEnd()">End Game</button>
     </div>
@@ -1934,6 +2018,7 @@ function genCode(n=5){ return Array.from({length:n},()=>ROOM_CHARS[Math.floor(Ma
 let ROOM = null, IS_HOST = false;
 
 // Sync game state to all connected devices
+// ── PUSH GAME STATE TO ALL DEVICES ──────────────────────
 function pushState() {
   if (!ROOM || !IS_HOST) return;
   DB.ref(`rooms/${ROOM}/state`).set({
@@ -1945,7 +2030,113 @@ function pushState() {
   });
 }
 
-// Guest devices subscribe and mirror the live scoreboard
+// ── HOST: CREATE ROOM + OPEN LOBBY ───────────────────────
+async function createOnlineRoom() {
+  const code = genCode();
+  ROOM = code; IS_HOST = true;
+  await DB.ref(`rooms/${code}`).set({ status:'lobby', created:Date.now() });
+
+  // Show lobby overlay
+  document.getElementById('lobby-code-display').textContent = code;
+  document.getElementById('lobby-overlay').classList.add('open');
+
+  // Listen for players connecting
+  DB.ref(`rooms/${code}/players`).on('value', snap => {
+    const players = snap.val() || {};
+    const list    = Object.values(players);
+    document.getElementById('lobby-count').textContent = list.length;
+    const grid = document.getElementById('lobby-players-grid');
+    if (list.length === 0) {
+      grid.innerHTML = '<span class="lobby-empty">Waiting for players to join…</span>';
+    } else {
+      const icons = ['🎸','🎵','🎹','🥁','🎺','🎻','🎤','🎧'];
+      grid.innerHTML = list.map((p,i) =>
+        `<div class="player-chip"><span class="dot"></span>${p.name||`Player ${i+1}`}</div>`
+      ).join('');
+    }
+  });
+
+  // Update the inline room display too
+  document.getElementById('room-code-out').textContent = code;
+  document.getElementById('room-created-msg').style.display = 'block';
+  document.getElementById('join-row').style.display = 'none';
+}
+
+function cancelLobby() {
+  if (ROOM) DB.ref(`rooms/${ROOM}`).remove();
+  ROOM = null; IS_HOST = false;
+  document.getElementById('lobby-overlay').classList.remove('open');
+  document.getElementById('room-created-msg').style.display = 'none';
+  document.getElementById('join-row').style.display = 'flex';
+}
+
+function startGameFromLobby() {
+  if (!ROOM) return;
+  DB.ref(`rooms/${ROOM}/status`).set('playing');
+  document.getElementById('lobby-overlay').classList.remove('open');
+  document.getElementById('mp-pause-btn').style.display = 'inline-block';
+}
+
+// ── GUEST: JOIN ROOM + WAIT FOR START ────────────────────
+let GUEST_PLAYER_REF = null;
+
+async function joinOnlineRoom() {
+  const code = (document.getElementById('join-code-in').value||'').trim().toUpperCase();
+  if (!code) return;
+  const snap = await DB.ref(`rooms/${code}`).once('value');
+  if (!snap.exists()) { alert(`Room "${code}" not found — check the code.`); return; }
+
+  ROOM = code; IS_HOST = false;
+
+  // Register this device in the room
+  const nameInput = document.getElementById('join-name-in');
+  const playerName = (nameInput && nameInput.value.trim()) || `Player`;
+  GUEST_PLAYER_REF = DB.ref(`rooms/${code}/players`).push({ name: playerName, joined: Date.now() });
+
+  // Show waiting room
+  document.getElementById('gw-code-display').textContent = code;
+  document.getElementById('guest-waiting').classList.add('open');
+
+  // Watch player list for this guest
+  DB.ref(`rooms/${code}/players`).on('value', snap => {
+    const players = Object.values(snap.val() || {});
+    document.getElementById('gw-players-list').innerHTML = players.map(p =>
+      `<div class="player-chip" style="font-size:.8rem"><span class="dot"></span>${p.name||'Player'}</div>`
+    ).join('');
+  });
+
+  // Watch room status — respond to start / pause / end
+  DB.ref(`rooms/${code}`).on('value', snap => {
+    const room = snap.val();
+    if (!room) return;
+    const status = room.status;
+    if (status === 'playing') {
+      document.getElementById('gw-status-text').textContent = '🎮 Game started!';
+      document.getElementById('gw-spinner').style.display = 'none';
+      setTimeout(() => document.getElementById('guest-waiting').classList.remove('open'), 800);
+    }
+    if (status === 'paused')  showPauseOverlay(false);
+    if (status === 'playing') hidePauseOverlay();
+    if (status === 'ended')   document.getElementById('guest-waiting').classList.remove('open');
+  });
+
+  // Mirror scoreboard in real time
+  subscribeGuest(code);
+  document.getElementById('room-joined-msg').textContent = `✅ Joined room ${code}`;
+  document.getElementById('room-joined-msg').style.display = 'block';
+}
+
+function leaveRoom() {
+  if (GUEST_PLAYER_REF) GUEST_PLAYER_REF.remove();
+  if (ROOM) DB.ref(`rooms/${ROOM}`).off();
+  ROOM = null;
+  document.getElementById('guest-waiting').classList.remove('open');
+  document.getElementById('join-code-in').value = '';
+  document.getElementById('room-joined-msg').style.display = 'none';
+  document.getElementById('join-row').style.display = 'flex';
+}
+
+// ── SCOREBOARD SYNC (guests) ─────────────────────────────
 function subscribeGuest(code) {
   DB.ref(`rooms/${code}/state`).on('value', snap => {
     const s = snap.val();
@@ -1957,24 +2148,47 @@ function subscribeGuest(code) {
   });
 }
 
-async function createOnlineRoom() {
-  const code = genCode();
-  ROOM = code; IS_HOST = true;
-  await DB.ref(`rooms/${code}`).set({ created: Date.now() });
-  document.getElementById('room-code-out').textContent = code;
-  document.getElementById('room-created-msg').style.display = 'block';
-  document.getElementById('join-row').style.display = 'none';
+// ── PAUSE / RESUME (host controls, syncs to all) ─────────
+let GAME_PAUSED = false;
+
+function togglePause() {
+  if (GAME_PAUSED) resumeGame(); else pauseGame();
 }
 
-async function joinOnlineRoom() {
-  const code = (document.getElementById('join-code-in').value||'').trim().toUpperCase();
-  if (!code) return;
-  const snap = await DB.ref(`rooms/${code}`).once('value');
-  if (!snap.exists()) { alert(`Room "${code}" not found — check the code.`); return; }
-  ROOM = code; IS_HOST = false;
-  document.getElementById('room-joined-msg').textContent = `✅ Joined room ${code} — scores sync live!`;
-  document.getElementById('room-joined-msg').style.display = 'block';
-  subscribeGuest(code);
+function pauseGame() {
+  GAME_PAUSED = true;
+  stopTimer();
+  stopAudio();
+  if (ROOM && IS_HOST) DB.ref(`rooms/${ROOM}/status`).set('paused');
+  showPauseOverlay(true); // host sees resume button
+  const btn = document.getElementById('mp-pause-btn');
+  if (btn) { btn.textContent = '▶ Resume'; btn.classList.add('paused'); }
+}
+
+function resumeGame() {
+  GAME_PAUSED = false;
+  hidePauseOverlay();
+  if (ROOM && IS_HOST) DB.ref(`rooms/${ROOM}/status`).set('playing');
+  const btn = document.getElementById('mp-pause-btn');
+  if (btn) { btn.textContent = '⏸ Pause'; btn.classList.remove('paused'); }
+  // Resume audio preview if there was one
+  if (AP.audio.src && AP.audio.src !== SILENT) {
+    AP.audio.play().catch(()=>{});
+    document.getElementById('mp-btn-play').textContent = '⏸';
+  }
+}
+
+function showPauseOverlay(isHost) {
+  const el = document.getElementById('pause-overlay');
+  const resumeBtn = document.getElementById('pause-resume-btn');
+  const sub = document.getElementById('pause-sub');
+  el.classList.add('open');
+  if (isHost) { resumeBtn.style.display='inline-block'; sub.textContent=''; }
+  else        { resumeBtn.style.display='none'; sub.textContent='Waiting for the host to resume…'; }
+}
+
+function hidePauseOverlay() {
+  document.getElementById('pause-overlay').classList.remove('open');
 }
 
 initSetup();
