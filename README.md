@@ -3,7 +3,7 @@
 A group trivia game testing whether you can identify the classic 70s/80s song that was sampled to make a modern hit.
 
 ## Features
-- **134 questions** across Hip-Hop (31), Soul & Funk (35), Rock (30), Classical (15) and Yacht Rock (23)
+- **153 questions** across Hip-Hop (39), Soul & Funk (41), Rock (32), Classical (16) and Yacht Rock (25)
 - **Difficulty filter** — All / Easy / Med + Hard, independent of the category filter
 - **Answer positions reshuffled every game** — the right answer is never always A
 - **iTunes 30-second previews** auto-play when each question loads
@@ -13,13 +13,25 @@ A group trivia game testing whether you can identify the classic 70s/80s song th
 - **Speed Round mode** — 15-second timer, double points
 - **Points-by-round chart** at game end
 - **Tie-breaker round** — guess the year the original was released
-- **Up to 15 teams** with 70s/80s band names (Fleetwood Mac, Led Zeppelin, ABBA…)
-- **🌐 Firebase multiplayer** — live room codes, guest scoreboards, host pause syncs to every device
+- **Up to 20 teams** with 70s/80s band names (Fleetwood Mac, Led Zeppelin, ABBA…)
+- **On-screen setup guide** — a "How to set up a game" panel walks a first-time host through it
+- **🌐 Firebase multiplayer** — one-tap invite link, guest scoreboards, host pause syncs everywhere
+
+## Running a game
+
+1. Name your teams (2–20), pick a question set / difficulty / timer, hit **🎵 Let's Play**.
+2. A 30-second clip of the modern hit plays automatically. Teams shout out the original.
+3. Click the answer they call — or **🔓 Reveal Answer** when the clock runs out. Faster = more points.
+4. Tap every team that got it right, then **Continue →** and **Next Question →**.
+   Tapping a team a second time cleanly undoes the award, streak bonus included.
 
 ## Live multiplayer
-Firebase is already configured for this project — hit **+ Create Room** on the setup screen and
-share the 5-letter code. Guests open the same URL, enter the code, and get a live scoreboard that
-updates the moment the host awards points. Host pause and game-over both push to every device.
+
+Firebase is already configured. Hit **+ Create Room**, then **📋 Copy invite link** and send it round —
+the link (`…/?room=CODE`) opens the game with the code pre-filled, so players just type a name and
+hit Join (or press Enter). On phones a **📤 Share…** button opens the native share sheet.
+Watch them appear in the lobby, then **▶ Start Game**. Guest phones show a live scoreboard that
+updates the instant you award points; host pause and game-over push to every device.
 
 If the Firebase CDN is unreachable (offline, restricted wifi) the panel hides itself and
 local pass-and-play carries on normally.

@@ -117,6 +117,28 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .tc6{background:#00f5d4;color:#000}.tc7{background:#ff6b6b;color:#fff}.tc8{background:#06d6a0;color:#000}
 .tc9{background:#118ab2;color:#fff}.tc10{background:#ef476f;color:#fff}.tc11{background:#ffd166;color:#000}
 .tc12{background:#3a86ff;color:#fff}.tc13{background:#8338ec;color:#fff}.tc14{background:#fb5607;color:#fff}
+/* ── INVITE LINK ── */
+.invite-box{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.6rem 0}
+.invite-link{flex:1 1 190px;min-width:0;background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.55rem .8rem;color:var(--neon);font-size:.82rem;outline:none;text-overflow:ellipsis}
+.invite-copy{background:var(--neon);color:#000;border:none;border-radius:8px;padding:.55rem 1rem;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;transition:filter .15s}
+.invite-copy:hover{filter:brightness(1.1)}
+.invite-copy.alt{background:var(--border);color:#fff}
+.invite-copy.done{background:var(--gold)}
+/* ── HOW TO PLAY ── */
+.howto{background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.3);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1.25rem}
+.howto h3{color:var(--gold);font-size:.95rem;margin-bottom:.15rem}
+.howto .howto-sub{font-size:.78rem;color:#888;margin-bottom:.9rem}
+.howto ol{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:.55rem}
+.howto li{font-size:.87rem;color:#ccc;line-height:1.5}
+.howto li b{color:#fff}
+.howto .howto-note{margin-top:.9rem;padding-top:.85rem;border-top:1px solid rgba(255,255,255,.08);font-size:.82rem;color:#999;line-height:1.55}
+.howto .howto-note b{color:var(--neon)}
+.howto summary{cursor:pointer;color:var(--gold);font-size:.95rem;font-weight:700;list-style:none;display:flex;align-items:center;gap:.5rem}
+.howto summary::-webkit-details-marker{display:none}
+.howto summary::after{content:'▾';font-size:.8rem;color:#888;transition:transform .2s}
+.howto[open] summary::after{transform:rotate(180deg)}
+.tc15{background:#2ec4b6;color:#000}.tc16{background:#e07be0;color:#000}.tc17{background:#9bf6ff;color:#000}
+.tc18{background:#c9184a;color:#fff}.tc19{background:#a3b18a;color:#000}
 
 /* ── GAME ── */
 #game{display:flex;flex-direction:column}
@@ -398,7 +420,12 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
   <div class="lobby-card">
     <div class="lobby-title">🎮 Game Lobby</div>
     <div class="lobby-code" id="lobby-code-display"></div>
-    <div class="lobby-code-hint">Share this code — players open the game URL and enter it</div>
+    <div class="lobby-code-hint">Send players the link below, or read out the code</div>
+    <div class="invite-box" style="margin:0 auto 1.25rem;max-width:420px">
+      <input class="invite-link" id="lobby-invite-link" readonly>
+      <button class="invite-copy" onclick="copyInvite(this)">📋 Copy invite link</button>
+      <button class="invite-copy alt" id="lobby-share-btn" onclick="shareInvite()" style="display:none">📤 Share…</button>
+    </div>
     <div class="lobby-players-label">Connected Players <span id="lobby-count" style="color:var(--neon)">0</span></div>
     <div class="lobby-players-grid" id="lobby-players-grid">
       <span class="lobby-empty">Waiting for players to join…</span>
@@ -447,6 +474,23 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
     </div>
   </div>
   <div class="setup-card">
+    <details class="howto" open>
+      <summary>👋 New here? How to set up a game</summary>
+      <div class="howto-sub">Everyone plays off this one screen — a laptop on a TV works best.</div>
+      <ol>
+        <li><b>Name your teams.</b> Two to twenty. Leave a box as-is to keep the band name, or type over it. <b>+ Add Team</b> for more, <b>✕</b> to drop one.</li>
+        <li><b>Choose your settings.</b> Question set, difficulty, timer, points per answer and how many rounds. Tick <b>⚡ Speed Round</b> for a 15-second clock and double points.</li>
+        <li><b>Hit 🎵 Let's Play.</b> A 30-second clip of the modern hit starts automatically — that's the song built on the sample.</li>
+        <li><b>Teams shout out the original.</b> Click the answer they call, or <b>🔓 Reveal Answer</b> when the clock runs out. Answer sooner, score more.</li>
+        <li><b>Award the points.</b> Tap every team that got it right, then <b>Continue →</b> and <b>Next Question →</b>. Tap a team twice to undo.</li>
+      </ol>
+      <div class="howto-note">
+        <b>Want scores on everyone's phone?</b> Hit <b>+ Create Room</b> below, then <b>📋 Copy invite link</b> and
+        text or email it round. The link opens the game with the code already filled in — players just type a name and
+        tap Join. When everyone's in the lobby, hit <b>▶ Start Game</b>. Their phones then show a live scoreboard that
+        updates the instant you award points. Not needed for normal play.
+      </div>
+    </details>
     <h2>🎮 Game Setup</h2>
     <div class="team-inputs" id="team-inputs"></div>
     <button class="add-team-btn" id="add-btn">+ Add Team</button>
@@ -482,9 +526,14 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
         <button onclick="joinOnlineRoom()" style="background:var(--border);border:1px solid #3a3a5a;color:#fff;border-radius:8px;padding:.55rem 1rem;font-weight:700;cursor:pointer;font-size:.9rem">Join →</button>
       </div>
       <div id="room-created-msg" style="display:none;margin-top:.85rem">
-        <span style="color:#aaa;font-size:.82rem">Share this code:</span>
+        <span style="color:#aaa;font-size:.82rem">Room code:</span>
         <strong style="color:var(--gold);font-size:1.6rem;letter-spacing:6px;display:block;margin-top:.25rem" id="room-code-out"></strong>
-        <span style="color:#666;font-size:.78rem">Players open the game URL and enter this code to join</span>
+        <div class="invite-box">
+          <input class="invite-link" id="invite-link-out" readonly>
+          <button class="invite-copy" id="invite-copy-btn" onclick="copyInvite(this)">📋 Copy invite link</button>
+          <button class="invite-copy alt" id="invite-share-btn" onclick="shareInvite()" style="display:none">📤 Share…</button>
+        </div>
+        <span style="color:#666;font-size:.78rem">Send that link — it opens the game with the code already filled in.</span>
       </div>
       <div id="room-joined-msg" style="display:none;margin-top:.75rem;font-size:.9rem;color:var(--neon)"></div>
     </div>
@@ -492,8 +541,8 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
     <div class="share-section">
       <h3>🔗 Share the Game</h3>
       <div style="display:flex;align-items:center;gap:.5rem;background:var(--dark);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem">
-        <span style="flex:1;font-size:.88rem;color:var(--neon);letter-spacing:.5px">sample-this-trivia-game.netlify.app</span>
-        <button onclick="navigator.clipboard.writeText('https://sample-this-trivia-game.netlify.app').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})" style="background:var(--border);border:none;color:#fff;border-radius:6px;padding:.35rem .75rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">Copy</button>
+        <span style="flex:1;font-size:.88rem;color:var(--neon);letter-spacing:.5px" id="game-url-out">sample-this-trivia-game.netlify.app</span>
+        <button onclick="copyGameURL(this)" style="background:var(--border);border:none;color:#fff;border-radius:6px;padding:.35rem .75rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">Copy</button>
       </div>
       <p class="share-note">Send this link — players open it on any device, no download needed.</p>
     </div>
@@ -1106,11 +1155,11 @@ const QUESTIONS = [
     opts:['Gimme! Gimme! Gimme! (ABBA)','Dancing Queen (ABBA)','The Winner Takes It All (ABBA)','Voulez-Vous (ABBA)'],ans:0,diff:'easy',cat:'rock'
   },{
     modern:{title:'"Hypnotize"',artist:'The Notorious B.I.G.',year:1997},
-    original:{title:'Sharevari',artist:'A Number of Names',year:1981},
-    q:'Biggie\'s last #1 hit — released just weeks before his death — looped the same Detroit electro synth riff from "Sharevari" (1981) that Gorillaz also used 8 years later. Who recorded it?',
-    hint:'🎵 Only 500 copies of the original were ever pressed. Between Biggie and Gorillaz, this 1981 micro-pressing influenced two era-defining #1 hits.',
-    fact:'"Hypnotize" (1997) samples "Sharevari" (1981) by A Number of Names. It was Biggie\'s final single; he was killed in a drive-by shooting just days after its release.',
-    opts:['A Number of Names','Cybotron','Model 500','Kraftwerk'],ans:0,diff:'hard',cat:'hip-hop'
+    original:{title:'Rise',artist:'Herb Alpert',year:1979},
+    q:'Biggie\'s last #1 hit — released just weeks before his death — is built on the laid-back bassline and horn line of which 1979 instrumental by a trumpet-playing record-label founder?',
+    hint:'🎺 The man who played the original also co-founded A&M Records. His instrumental spent two weeks at #1 in 1979.',
+    fact:'"Hypnotize" (1997) samples "Rise" (1979) by Herb Alpert. It was Biggie\'s final single — he was killed in a drive-by shooting days before it topped the Hot 100.',
+    opts:['Rise (Herb Alpert)','Tijuana Taxi (Herb Alpert)','Feels So Good (Chuck Mangione)','Pick Up the Pieces (AWB)'],ans:0,diff:'hard',cat:'hip-hop'
   },
 
   // ── ⛵ YACHT ROCK (20 questions) ──
@@ -1648,19 +1697,155 @@ const QUESTIONS = [
     fact:'"Superthug" (1998) samples the synth riff from "Five Miles Out" (1982) by Mike Oldfield. It was an early Pharrell production that showed his range beyond typical soul samples.',
     opts:['Five Miles Out (Mike Oldfield)','Tubular Bells (Mike Oldfield)','Moonlight Shadow (Mike Oldfield)','Ommadawn (Mike Oldfield)'],ans:0,diff:'hard',cat:'rock'
   },{
-    modern:{title:'"Gimme! Gimme! Gimme!"',artist:'Madonna',year:2005},
-    original:{title:'Gimme! Gimme! Gimme! (A Man After Midnight)',artist:'ABBA',year:1979},
-    q:'Madonna\'s "Hung Up" (2005) samples one of the most recognisable synth riffs in pop history — the first time ABBA had ever allowed a sample. Which track?',
-    hint:'🎹 ABBA had turned down every sample request for decades. They made an exception because they loved the finished Madonna track.',
-    fact:'"Hung Up" (2005) by Madonna samples the synth hook from ABBA\'s "Gimme! Gimme! Gimme!" (1979) — the first time ABBA had granted sampling rights in their entire catalogue.',
-    opts:['Gimme! Gimme! Gimme! (ABBA)','Dancing Queen (ABBA)','The Winner Takes It All (ABBA)','Super Trouper (ABBA)'],ans:0,diff:'easy',cat:'rock'
-  },{
     modern:{title:'"All By Myself"',artist:'Celine Dion',year:1996},
     original:{title:'All By Myself',artist:'Eric Carmen',year:1975},
     q:'Celine Dion\'s power ballad is a cover of Eric Carmen\'s 1975 original — which itself was based on a stolen melody from a Romantic-era concerto. But which artist did Dion cover directly?',
     hint:'🎤 Eric Carmen admitted he borrowed from Rachmaninoff without initially seeking permission — so both the 1975 and 1996 versions carry that classical debt.',
     fact:'"All By Myself" was first recorded by Eric Carmen in 1975 using Rachmaninoff\'s Piano Concerto No. 2. Celine Dion\'s 1996 cover brought it to a new generation.',
     opts:['Eric Carmen','Barry Manilow','Air Supply','Leo Sayer'],ans:0,diff:'easy',cat:'rock'
+  },
+
+  // ── WAVE 5: 20 more ──────────────────────────────────────
+  {
+    modern:{title:'"California Love"',artist:'2Pac ft. Dr. Dre',year:1995},
+    original:{title:'Woman to Woman',artist:'Joe Cocker',year:1972},
+    q:'The unmistakable piano-and-talkbox intro to 2Pac\'s comeback single was lifted from which 1972 track by a raspy-voiced British soul-rock singer?',
+    hint:'🎹 The singer is English, famous for a Woodstock performance and a Beatles cover. Dr. Dre looped his 1972 album cut into G-funk history.',
+    fact:'"California Love" (1995) samples "Woman to Woman" (1972) by Joe Cocker, with Roger Troutman on talkbox. It was 2Pac\'s first single after leaving prison.',
+    opts:['Woman to Woman (Joe Cocker)','With a Little Help from My Friends (Joe Cocker)','Feelin\' Alright (Joe Cocker)','You Are So Beautiful (Joe Cocker)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Changes"',artist:'2Pac',year:1998},
+    original:{title:'The Way It Is',artist:'Bruce Hornsby & the Range',year:1986},
+    q:'2Pac\'s posthumous social-commentary hit is built entirely on the piano figure and chorus of which 1986 #1 single about civil rights and inequality?',
+    hint:'🎹 The original was itself a protest song — "that\'s just the way it is, some things will never change." 2Pac kept both the piano and the sentiment.',
+    fact:'"Changes" (1998) samples "The Way It Is" (1986) by Bruce Hornsby & the Range. Hornsby has said he considers 2Pac\'s version a genuine continuation of the original\'s message.',
+    opts:['The Way It Is (Bruce Hornsby)','Mandolin Rain (Bruce Hornsby)','Every Little Kiss (Bruce Hornsby)','The Valley Road (Bruce Hornsby)'],ans:0,diff:'easy',cat:'hip-hop'
+  },{
+    modern:{title:'"Dear Mama"',artist:'2Pac',year:1995},
+    original:{title:'In My Wildest Dreams',artist:'Joe Sample',year:1978},
+    q:'2Pac\'s tribute to his mother rides a warm electric-piano loop from which 1978 solo album by the keyboardist of The Crusaders?',
+    hint:'🎹 The player was a founding member of jazz-funk group The Crusaders. The track also borrows the Spinners\' "Sadie" for its chorus.',
+    fact:'"Dear Mama" (1995) samples "In My Wildest Dreams" (1978) by Joe Sample. In 2010 it became one of the first rap songs added to the Library of Congress National Recording Registry.',
+    opts:['In My Wildest Dreams (Joe Sample)','Street Life (The Crusaders)','Rainbow Seeker (Joe Sample)','Put It Where You Want It (The Crusaders)'],ans:0,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"The Humpty Dance"',artist:'Digital Underground',year:1990},
+    original:{title:'Let\'s Play House',artist:'Parliament',year:1980},
+    q:'Shock G\'s nose-glasses alter ego danced his way up the charts on a bassline taken from which 1980 P-Funk track?',
+    hint:'🕶️ George Clinton\'s collective supplied the groove — the same catalogue that later powered most of the G-funk era.',
+    fact:'"The Humpty Dance" (1990) samples "Let\'s Play House" (1980) by Parliament. Digital Underground\'s live shows later gave a young Tupac Shakur his first stage time.',
+    opts:['Let\'s Play House (Parliament)','Atomic Dog (George Clinton)','Knee Deep (Funkadelic)','One Nation Under a Groove (Funkadelic)'],ans:0,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Funky Cold Medina"',artist:'Tone Loc',year:1989},
+    original:{title:'Christine Sixteen',artist:'KISS',year:1977},
+    q:'Tone Loc\'s follow-up to "Wild Thing" swiped its main guitar riff from which face-painted hard-rock band\'s 1977 single?',
+    hint:'🤘 The same producers had already raided Van Halen for "Wild Thing" — this time they went after a band famous for platform boots and stage blood.',
+    fact:'"Funky Cold Medina" (1989) samples "Christine Sixteen" (1977) by KISS. Both of Tone Loc\'s hits were built on uncleared 70s hard-rock riffs.',
+    opts:['Christine Sixteen (KISS)','Detroit Rock City (KISS)','Rock and Roll All Nite (KISS)','Strutter (KISS)'],ans:0,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Wild Wild West"',artist:'Will Smith',year:1999},
+    original:{title:'I Wish',artist:'Stevie Wonder',year:1976},
+    q:'Will Smith\'s title track for his 1999 blockbuster rebuilds the bassline and horn stabs of which Stevie Wonder hit from Songs in the Key of Life?',
+    hint:'🎺 The original is a nostalgic look back at childhood mischief — and its bassline is one of the most recognisable in all of funk.',
+    fact:'"Wild Wild West" (1999) interpolates "I Wish" (1976) by Stevie Wonder, and also nods to Kool Moe Dee\'s 1987 song of the same name.',
+    opts:['I Wish (Stevie Wonder)','Sir Duke (Stevie Wonder)','Boogie On Reggae Woman (Stevie Wonder)','Do I Do (Stevie Wonder)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Miami"',artist:'Will Smith',year:1997},
+    original:{title:'And the Beat Goes On',artist:'The Whispers',year:1980},
+    q:'Will Smith\'s ode to South Beach glides along the string-and-bass groove of which 1980 post-disco hit by a smooth Los Angeles vocal group?',
+    hint:'🌴 The original hit #1 on the R&B chart in 1980 and is a staple of any "boogie" era playlist.',
+    fact:'"Miami" (1997) samples "And the Beat Goes On" (1980) by The Whispers. The song helped make Smith the rare rapper with a citywide tourism anthem.',
+    opts:['And the Beat Goes On (The Whispers)','Rock Steady (The Whispers)','It\'s a Love Thing (The Whispers)','Keep On Lovin\' Me (The Whispers)'],ans:0,diff:'medium',cat:'hip-hop'
+  },{
+    modern:{title:'"Slow Jamz"',artist:'Twista ft. Kanye West & Jamie Foxx',year:2003},
+    original:{title:'A House Is Not a Home',artist:'Luther Vandross',year:1981},
+    q:'Kanye West sped up a Luther Vandross vocal into a chipmunk-soul hook for this #1 hit. Which Vandross recording did he chop?',
+    hint:'🎤 The song was written by Burt Bacharach and Hal David; Vandross\' 1981 reading is the definitive version — and the one Kanye pitched up.',
+    fact:'"Slow Jamz" (2003) samples Luther Vandross\' 1981 recording of "A House Is Not a Home" — a defining example of Kanye\'s early sped-up soul style.',
+    opts:['A House Is Not a Home (Luther Vandross)','Never Too Much (Luther Vandross)','Superstar (Luther Vandross)','Here and Now (Luther Vandross)'],ans:0,diff:'hard',cat:'hip-hop'
+  },{
+    modern:{title:'"Get Money"',artist:'Junior M.A.F.I.A.',year:1995},
+    original:{title:'You Can\'t Turn Me Away',artist:'Sylvia Striplin',year:1981},
+    q:'Biggie and Lil\' Kim\'s breakout posse cut loops a mellow keyboard phrase from which 1981 record by a former Aquarian Dream vocalist?',
+    hint:'🎹 The original was produced by Roy Ayers\' circle and stayed obscure until hip-hop producers rediscovered it in the mid-90s.',
+    fact:'"Get Money" (1995) samples "You Can\'t Turn Me Away" (1981) by Sylvia Striplin. The record launched Lil\' Kim\'s career.',
+    opts:['You Can\'t Turn Me Away (Sylvia Striplin)','Searching (Roy Ayers)','Everybody Loves the Sunshine (Roy Ayers)','Give Me Your Love (Sylvia Striplin)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Doin\' It"',artist:'LL Cool J',year:1996},
+    original:{title:'My Jamaican Guy',artist:'Grace Jones',year:1982},
+    q:'LL Cool J\'s slinky 1996 duet is built on the reggae-tinged synth groove of which 1982 track by a Jamaican-born model turned new wave icon?',
+    hint:'🇯🇲 The original comes from an album recorded at Compass Point Studios in the Bahamas with Sly & Robbie in the rhythm section.',
+    fact:'"Doin\' It" (1996) samples "My Jamaican Guy" (1982) by Grace Jones — one of the most-sampled tracks from her Compass Point era.',
+    opts:['My Jamaican Guy (Grace Jones)','Pull Up to the Bumper (Grace Jones)','Slave to the Rhythm (Grace Jones)','Nightclubbing (Grace Jones)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Music Sounds Better with You"',artist:'Stardust',year:1998},
+    original:{title:'Fate',artist:'Chaka Khan',year:1981},
+    q:'One of the most beloved French house records ever made loops a single guitar phrase from which 1981 Chaka Khan album track?',
+    hint:'🪩 The producer was Thomas Bangalter of Daft Punk. The loop is only a couple of seconds long — repeated for the entire record.',
+    fact:'"Music Sounds Better with You" (1998) by Stardust samples "Fate" (1981) by Chaka Khan. It sold over a million copies on the strength of one guitar loop.',
+    opts:['Fate (Chaka Khan)','I Feel for You (Chaka Khan)','Ain\'t Nobody (Rufus & Chaka Khan)','Tell Me Something Good (Rufus)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"Lady (Hear Me Tonight)"',artist:'Modjo',year:2000},
+    original:{title:'Soup for One',artist:'Chic',year:1982},
+    q:'This French house #1 is built on a Nile Rodgers guitar line from which 1982 Chic recording, written for a film soundtrack?',
+    hint:'🎸 Nile Rodgers again — the single most sampled rhythm guitarist in pop music. The original was the title track of a 1982 romantic comedy soundtrack.',
+    fact:'"Lady (Hear Me Tonight)" (2000) by Modjo samples "Soup for One" (1982) by Chic. Rodgers has said he only discovered the sample when the song was already a hit.',
+    opts:['Soup for One (Chic)','Le Freak (Chic)','I Want Your Love (Chic)','My Forbidden Lover (Chic)'],ans:0,diff:'medium',cat:'soul'
+  },{
+    modern:{title:'"Nothing Compares 2 U"',artist:'Sinéad O\'Connor',year:1990},
+    original:{title:'Nothing Compares 2 U',artist:'The Family (written by Prince)',year:1985},
+    q:'Sinéad O\'Connor\'s career-defining single was written and first recorded five years earlier by a side project of which artist?',
+    hint:'💜 He wrote it in 1984 for a band he assembled from the remains of another of his groups. He rarely performed it himself until after her version.',
+    fact:'"Nothing Compares 2 U" was written by Prince and first released by his side project The Family in 1985. Sinéad O\'Connor\'s 1990 version topped charts worldwide.',
+    opts:['Prince','Michael Jackson','Terence Trent D\'Arby','Rick James'],ans:0,diff:'easy',cat:'rock'
+  },{
+    modern:{title:'"I Will Always Love You"',artist:'Whitney Houston',year:1992},
+    original:{title:'I Will Always Love You',artist:'Dolly Parton',year:1974},
+    q:'The best-selling single by a female artist in history is a cover of a 1974 country song — written by its original singer as a farewell to a business partner. Who wrote it?',
+    hint:'🤠 She wrote it the same day as "Jolene", and famously turned down Elvis when his manager demanded half the publishing.',
+    fact:'"I Will Always Love You" was written and recorded by Dolly Parton in 1974 as a goodbye to Porter Wagoner. Whitney Houston\'s 1992 version spent 14 weeks at #1.',
+    opts:['Dolly Parton','Tammy Wynette','Linda Ronstadt','Loretta Lynn'],ans:0,diff:'easy',cat:'soul'
+  },{
+    modern:{title:'"Praise You"',artist:'Fatboy Slim',year:1998},
+    original:{title:'Take Yo\' Praise',artist:'Camille Yarbrough',year:1975},
+    q:'Fatboy Slim\'s piano-and-handclaps anthem is built around a vocal from which 1975 album by a poet, activist and actress?',
+    hint:'🎤 The original recording was almost forgotten until Norman Cook looped its opening vocal line over a battered piano sample.',
+    fact:'"Praise You" (1998) samples "Take Yo\' Praise" (1975) by Camille Yarbrough. Spike Jonze directed the famous guerrilla-style music video.',
+    opts:['Take Yo\' Praise (Camille Yarbrough)','Ain\'t No Sunshine (Bill Withers)','Wade in the Water (Ramsey Lewis)','Woman of the Ghetto (Marlena Shaw)'],ans:0,diff:'hard',cat:'soul'
+  },{
+    modern:{title:'"The Rockafeller Skank"',artist:'Fatboy Slim',year:1998},
+    original:{title:'Sliced Tomatoes',artist:'The Just Brothers',year:1972},
+    q:'"Right about now, the funk soul brother…" — the surf-guitar break under that phrase comes from which 1972 Northern Soul instrumental?',
+    hint:'🏄 The original was a Northern Soul dancefloor favourite in British clubs long before it was sped up and looped into a global hit.',
+    fact:'"The Rockafeller Skank" (1998) samples "Sliced Tomatoes" (1972) by The Just Brothers, plus a vocal from Lord Finesse.',
+    opts:['Sliced Tomatoes (The Just Brothers)','Tainted Love (Gloria Jones)','The Snake (Al Wilson)','Out on the Floor (Dobie Gray)'],ans:0,diff:'hard',cat:'rock'
+  },{
+    modern:{title:'"Ray of Light"',artist:'Madonna',year:1998},
+    original:{title:'Sepheryn',artist:'Curtiss Maldoon',year:1971},
+    q:'Madonna\'s electronic reinvention rewrote the melody and lyrics of which obscure 1971 British folk duo\'s song?',
+    hint:'🌞 A niece of one of the original duo recorded a demo version in the 90s, which is how the song reached Madonna\'s producer.',
+    fact:'"Ray of Light" (1998) is adapted from "Sepheryn" (1971) by Curtiss Maldoon. Both original writers received co-writing credit on Madonna\'s Grammy-winning single.',
+    opts:['Sepheryn (Curtiss Maldoon)','Solid Air (John Martyn)','Northern Sky (Nick Drake)','Who Knows Where the Time Goes (Fairport Convention)'],ans:0,diff:'hard',cat:'rock'
+  },{
+    modern:{title:'"Higher Love"',artist:'Kygo & Whitney Houston',year:2019},
+    original:{title:'Higher Love',artist:'Steve Winwood',year:1986},
+    q:'Kygo\'s 2019 global hit pairs an unreleased Whitney Houston vocal with a tropical-house rework of which 1986 Grammy-winning #1?',
+    hint:'🎹 The original won Record of the Year and features Chaka Khan on backing vocals. Whitney had recorded a cover of it in 1990 that was never released.',
+    fact:'"Higher Love" (2019) rebuilds Steve Winwood\'s 1986 single around a Whitney Houston vocal recorded in 1990 and shelved for nearly 30 years.',
+    opts:['Higher Love (Steve Winwood)','Roll with It (Steve Winwood)','Back in the High Life Again (Steve Winwood)','Valerie (Steve Winwood)'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"Cold Heart (PNAU Remix)"',artist:'Elton John & Dua Lipa',year:2021},
+    original:{title:'Rocket Man (I Think It\'s Going to Be a Long, Long Time)',artist:'Elton John',year:1972},
+    q:'This 2021 chart-topper stitches together four different Elton John songs. Which 1972 classic supplies its main chorus hook?',
+    hint:'🚀 The mashup also pulls from "Sacrifice", "Kiss the Bride" and "Where\'s the Shoorah?" — but one 1972 space-travel ballad carries the chorus.',
+    fact:'"Cold Heart" (2021) by PNAU blends four Elton John recordings, led by "Rocket Man" (1972). It gave Elton his first UK #1 in 16 years.',
+    opts:['Rocket Man','Tiny Dancer','Goodbye Yellow Brick Road','Bennie and the Jets'],ans:0,diff:'easy',cat:'yacht-rock'
+  },{
+    modern:{title:'"A Whiter Shade of Pale"',artist:'Procol Harum',year:1967},
+    original:{title:'Air on the G String / "Sleepers, Awake" (BWV 1068 & 140)',artist:'J.S. Bach',year:1731},
+    q:'The descending organ line of this 1967 psychedelic classic is widely recognised as a reworking of a melodic idea by which Baroque composer?',
+    hint:'🎹 The organist has said he was consciously playing in the style of the composer who wrote "Air on the G String" — the same man behind the Brandenburg Concertos.',
+    fact:'"A Whiter Shade of Pale" (1967) borrows its descending bass line from J.S. Bach — most often traced to "Air on the G String" and the chorale "Sleepers, Awake."',
+    opts:['J.S. Bach','George Frideric Handel','Antonio Vivaldi','Henry Purcell'],ans:0,diff:'medium',cat:'classical'
   }
 ];
 
@@ -1781,8 +1966,8 @@ function clearEmbed() { document.getElementById('mp-embed').style.display='none'
 // ════════════════════════════════════════
 // GAME STATE
 // ════════════════════════════════════════
-const COLORS=['#f72585','#4cc9f0','#7bed9f','#ffd60a','#ff6b35','#b185db','#00f5d4','#ff6b6b','#06d6a0','#118ab2','#ef476f','#ffd166','#3a86ff','#8338ec','#fb5607'];
-const BANDS=[{name:'Fleetwood Mac',icon:'🌙'},{name:'The Eagles',icon:'🦅'},{name:'ABBA',icon:'💃'},{name:'Led Zeppelin',icon:'🚀'},{name:'Queen',icon:'♛'},{name:'The Police',icon:'🎸'},{name:'Blondie',icon:'⚡'},{name:'Talking Heads',icon:'🗣'},{name:'Heart',icon:'♥'},{name:'Bee Gees',icon:'🕺'},{name:'Earth Wind & Fire',icon:'🔥'},{name:'The Cars',icon:'🚗'},{name:'Van Halen',icon:'🤘'},{name:'Duran Duran',icon:'DD'},{name:"The Go-Go's",icon:'GG'}];
+const COLORS=['#f72585','#4cc9f0','#7bed9f','#ffd60a','#ff6b35','#b185db','#00f5d4','#ff6b6b','#06d6a0','#118ab2','#ef476f','#ffd166','#3a86ff','#8338ec','#fb5607','#2ec4b6','#e07be0','#9bf6ff','#c9184a','#a3b18a'];
+const BANDS=[{name:'Fleetwood Mac',icon:'🌙'},{name:'The Eagles',icon:'🦅'},{name:'ABBA',icon:'💃'},{name:'Led Zeppelin',icon:'🚀'},{name:'Queen',icon:'♛'},{name:'The Police',icon:'🎸'},{name:'Blondie',icon:'⚡'},{name:'Talking Heads',icon:'🗣'},{name:'Heart',icon:'♥'},{name:'Bee Gees',icon:'🕺'},{name:'Earth Wind & Fire',icon:'🔥'},{name:'The Cars',icon:'🚗'},{name:'Van Halen',icon:'🤘'},{name:'Duran Duran',icon:'DD'},{name:"The Go-Go's",icon:'GG'},{name:'The Clash',icon:'💣'},{name:'Prince',icon:'💜'},{name:'Chic',icon:'🪩'},{name:'The Kinks',icon:'🎺'},{name:'Steely Dan',icon:'🎷'}];
 const DIFF_INFO={easy:{color:'#7bed9f',label:'🟢 Easy'},medium:{color:'#ffd60a',label:'🟡 Medium'},hard:{color:'#f72585',label:'🔴 Hard'}};
 const CAT_INFO={'hip-hop':{cls:'cat-hip-hop',label:'Hip-Hop'},rock:{cls:'cat-rock',label:'Rock'},soul:{cls:'cat-soul',label:'Soul & Funk'},classical:{cls:'cat-classical',label:'🎻 Classical'},'yacht-rock':{cls:'cat-yacht-rock',label:'⛵ Yacht Rock'}};
 
@@ -1826,7 +2011,7 @@ function initSetup() {
   updateBurst();
 }
 function renderTeams(teams) { const c=document.getElementById('team-inputs'); c.innerHTML=''; teams.forEach((t,i)=>addTeamRow(t.name,i)); }
-const MAX_TEAMS = 15;
+const MAX_TEAMS = 20;   // COLORS, BANDS and the .tc0–.tc19 badge classes all go to 20
 function addTeamRow(name, i) {
   const c=document.getElementById('team-inputs');
   const rows=c.querySelectorAll('.team-row');
@@ -1835,7 +2020,7 @@ function addTeamRow(name, i) {
   const band=BANDS[idx%BANDS.length];
   const defaultName=(name!==undefined&&name!=='')?name:band.name;
   const d=document.createElement('div'); d.className='team-row';
-  d.innerHTML=`<div class="team-badge tc${idx%15}" title="${band.name}">${band.icon}</div><input type="text" placeholder="${band.name}" value="${defaultName}" maxlength="24"><button class="rm-btn" onclick="removeTeamRow(this)" title="Remove">✕</button>`;
+  d.innerHTML=`<div class="team-badge tc${idx%MAX_TEAMS}" title="${band.name}">${band.icon}</div><input type="text" placeholder="${band.name}" value="${defaultName}" maxlength="24"><button class="rm-btn" onclick="removeTeamRow(this)" title="Remove">✕</button>`;
   c.appendChild(d);
   updateAddBtn();
   return true;
@@ -1858,7 +2043,7 @@ function removeTeamRow(btn) {
   document.querySelectorAll('.team-row').forEach((r,i)=>{
     const band=BANDS[i%BANDS.length];
     const badge=r.querySelector('.team-badge');
-    badge.textContent=band.icon; badge.className=`team-badge tc${i%15}`; badge.title=band.name;
+    badge.textContent=band.icon; badge.className=`team-badge tc${i%MAX_TEAMS}`; badge.title=band.name;
     r.querySelector('input').placeholder=band.name;
   });
 }
@@ -2312,11 +2497,7 @@ function startTiebreaker() {
   // Pick 3 random questions from those played. A handful of entries use the "original"
   // slot for a film/agency rather than an older record — those make nonsense year
   // questions, so prefer real originals and only fall back if there aren't enough.
-  const shuffle=a=>[...a].sort(()=>Math.random()-.5);
-  const isReal=q=>q.original&&q.modern&&q.original.year<q.modern.year;
-  // Real originals first; only top up from the rest if the deck was too short
-  const src=[...shuffle(G.qs.filter(isReal)), ...shuffle(G.qs.filter(q=>!isReal(q)))];
-  const pool=src.slice(0,Math.min(3,src.length));
+  const pool=[...G.qs].sort(()=>Math.random()-.5).slice(0,Math.min(3,G.qs.length));
   TB = { qs: pool, idx: 0, scores: G.teams.map(t=>({name:t.name,color:t.color,pts:0})) };
   showScreen('tiebreaker');
   loadTBQuestion();
@@ -2325,9 +2506,13 @@ function startTiebreaker() {
 function loadTBQuestion() {
   const q=TB.qs[TB.idx];
   TB.scoredThisRound = false;
+  // Always ask about the `modern` side: that is the track the game actually played,
+  // and it is a real recording in every entry. A handful of entries carry a film or
+  // an agency in the `original` slot, which made for nonsense year questions.
+  TB.target = q.modern;
   document.getElementById('tb-q-num').textContent=`Round ${TB.idx+1} of ${TB.qs.length}`;
-  document.getElementById('tb-question').textContent=`In what year was "${q.original.title}" by ${q.original.artist} released?`;
-  document.getElementById('tb-artist').textContent=`(Sampled in "${q.modern.title}" by ${q.modern.artist})`;
+  document.getElementById('tb-question').textContent=`In what year was "${q.modern.title.replace(/"/g,'')}" by ${q.modern.artist} released?`;
+  document.getElementById('tb-artist').textContent='(You heard this one earlier — closest year wins)';
   document.getElementById('tb-answer').style.display='none';
   document.getElementById('tb-reveal-btn').style.display='inline-block';
   document.getElementById('tb-next-btn').style.display='none';
@@ -2335,8 +2520,7 @@ function loadTBQuestion() {
 }
 
 function tbReveal() {
-  const q=TB.qs[TB.idx];
-  document.getElementById('tb-year').textContent=q.original.year;
+  document.getElementById('tb-year').textContent=TB.target.year;
   document.getElementById('tb-answer').style.display='block';
   document.getElementById('tb-reveal-btn').style.display='none';
   SFX.reveal();
@@ -2355,8 +2539,7 @@ function tbReveal() {
 
 function awardTB() {
   if (TB.scoredThisRound) return;          // one scoring pass per round — clicking again must not re-award
-  const q=TB.qs[TB.idx];
-  const actual=q.original.year;
+  const actual=TB.target.year;
   // A blank box is "no guess", not a guess of year 0
   const diffs=TB.scores.map((s,i)=>{
     const raw=(document.getElementById(`tb-guess-${i}`).value||'').trim();
@@ -2458,6 +2641,43 @@ if (!DB) {
     'Local pass-and-play works normally.</p>';
 }
 
+// ── INVITE LINK ──────────────────────────────────────────
+// One link that opens the game with the room code already filled in.
+function inviteURL(code) {
+  return `${location.origin}${location.pathname}?room=${code}`;
+}
+function setInviteLinks(code) {
+  const url = inviteURL(code);
+  ['invite-link-out','lobby-invite-link'].forEach(id => { const el=document.getElementById(id); if (el) el.value = url; });
+  // Native share sheet on phones; desktop just gets Copy
+  if (navigator.share) ['invite-share-btn','lobby-share-btn'].forEach(id => { const b=document.getElementById(id); if (b) b.style.display='inline-block'; });
+}
+function copyInvite(btn) {
+  const url = inviteURL(ROOM || '');
+  const done = () => { const t=btn.textContent; btn.textContent='✅ Copied!'; btn.classList.add('done');
+                       setTimeout(()=>{ btn.textContent=t; btn.classList.remove('done'); },1800); };
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done).catch(()=>fallback());
+  else fallback();
+  function fallback() {   // clipboard API needs https — select the field so the host can copy manually
+    const el = btn.parentElement.querySelector('.invite-link');
+    if (el) { el.focus(); el.select(); try { document.execCommand('copy'); done(); } catch(e) { btn.textContent='Press Ctrl+C'; } }
+  }
+}
+// Plain game link (no room) — for "here's the game, open it on your phone"
+function copyGameURL(btn) {
+  const url = `${location.origin}${location.pathname}`;
+  const done = () => { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',1500); };
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done).catch(()=>{}); else done();
+}
+function shareInvite() {
+  if (!navigator.share || !ROOM) return;
+  navigator.share({
+    title: 'Sample This! — 70s & 80s Music Trivia',
+    text:  `Join my Sample This! game — room ${ROOM}`,
+    url:   inviteURL(ROOM)
+  }).catch(()=>{});
+}
+
 const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function genCode(n=5){ return Array.from({length:n},()=>ROOM_CHARS[Math.floor(Math.random()*ROOM_CHARS.length)]).join(''); }
 let ROOM = null, IS_HOST = false;
@@ -2484,6 +2704,7 @@ async function createOnlineRoom() {
 
   // Show lobby overlay
   document.getElementById('lobby-code-display').textContent = code;
+  setInviteLinks(code);
   document.getElementById('lobby-overlay').classList.add('open');
 
   // Listen for players connecting
@@ -2682,6 +2903,29 @@ function hidePauseOverlay() {
 }
 
 initSetup();
+
+// Show the real address this copy is served from, not a hardcoded one
+(() => { const el = document.getElementById('game-url-out');
+         if (el) el.textContent = (location.host + location.pathname).replace(/\/index\.html$/, '').replace(/\/$/, ''); })();
+
+// ── ARRIVING FROM AN INVITE LINK (?room=CODE) ────────────
+// Pre-fill the code, scroll the join row into view and prompt for a name only.
+(function handleInviteLink() {
+  const code = (new URLSearchParams(location.search).get('room') || '').trim().toUpperCase();
+  if (!code || !DB) return;
+  const codeIn = document.getElementById('join-code-in');
+  const nameIn = document.getElementById('join-name-in');
+  codeIn.value = code;
+  const sec = document.getElementById('online-section');
+  sec.insertAdjacentHTML('afterbegin',
+    `<div style="background:rgba(0,245,212,.14);border:1px solid var(--neon);border-radius:10px;padding:.75rem 1rem;margin-bottom:.9rem;font-size:.9rem;color:var(--neon)">
+       🎟️ You've been invited to room <b style="letter-spacing:3px">${code}</b> — enter your name and hit Join.
+     </div>`);
+  sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  nameIn.focus();
+  // Enter in either field joins
+  [nameIn, codeIn].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') joinOnlineRoom(); }));
+})();
 </script>
 </body>
 </html>
