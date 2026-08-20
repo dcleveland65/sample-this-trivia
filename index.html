@@ -4,41 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sample This! — 70s &amp; 80s Music Trivia</title>
-<!-- ── HOST LOBBY ── -->
-<div class="lobby-overlay" id="lobby-overlay">
-  <div class="lobby-card">
-    <div class="lobby-title">🎮 Game Lobby</div>
-    <div class="lobby-code" id="lobby-code-display"></div>
-    <div class="lobby-code-hint">Share this code — players open the game URL and enter it</div>
-    <div class="lobby-players-label">Connected Players <span id="lobby-count" style="color:var(--neon)">0</span></div>
-    <div class="lobby-players-grid" id="lobby-players-grid">
-      <span class="lobby-empty">Waiting for players to join…</span>
-    </div>
-    <button class="lobby-start-btn" onclick="startGameFromLobby()">▶ Start Game</button>
-    <button class="lobby-cancel-btn" onclick="cancelLobby()">Cancel Room</button>
-  </div>
-</div>
-
-<!-- ── GUEST WAITING ROOM ── -->
-<div class="guest-waiting" id="guest-waiting">
-  <div class="gw-logo">🎵 SAMPLE THIS!</div>
-  <div style="font-size:.85rem;color:#666;margin-bottom:.25rem">Room</div>
-  <div class="gw-code" id="gw-code-display"></div>
-  <div class="gw-status" id="gw-status-text">✅ Connected — waiting for host to start…</div>
-  <div class="gw-spinner"><div class="gw-dot"></div><div class="gw-dot"></div><div class="gw-dot"></div></div>
-  <div class="gw-players-label">In this room</div>
-  <div class="gw-players-list" id="gw-players-list"></div>
-  <button class="gw-leave-btn" onclick="leaveRoom()">Leave Room</button>
-</div>
-
-<!-- ── PAUSE OVERLAY (shown on ALL devices when host pauses) ── -->
-<div class="pause-overlay" id="pause-overlay">
-  <div class="pause-icon">⏸</div>
-  <div class="pause-title">Game Paused</div>
-  <div class="pause-sub" id="pause-sub">Waiting for the host to resume…</div>
-  <button class="pause-resume-btn" id="pause-resume-btn" onclick="resumeGame()" style="display:none">▶ Resume Game</button>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -170,7 +135,17 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 .q-progress-bar{height:100%;background:linear-gradient(90deg,var(--neon),var(--retro));transition:width .5s ease;border-radius:0 2px 2px 0}
 
 .game-body{flex:1;padding:1.25rem 1.5rem;display:grid;grid-template-columns:1fr 280px;gap:1.25rem;max-width:1100px;width:100%;margin:0 auto}
-@media(max-width:750px){.game-body{grid-template-columns:1fr}.side-panel{order:-1}}
+/* On phones the side panel used to stack whole (scoreboard + difficulty + the tall
+   music panel) ABOVE the question, pushing the question ~700px down the page.
+   Dissolve the panel so we can interleave: scores → question → now playing. */
+@media(max-width:750px){
+  .game-body{grid-template-columns:1fr}
+  .game-body>.side-panel{display:contents}   /* out-specifies the later .side-panel{display:flex} */
+  .game-body .scoreboard{order:-2}
+  .game-body .question-col{order:0}
+  .game-body .music-panel{order:1}
+  .game-body .diff-badge{order:2}       /* least important — keep it out of the way */
+}
 .question-col{display:flex;flex-direction:column;gap:1rem}
 
 /* Timer */
@@ -418,6 +393,41 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
 <body>
 <div class="streak-toast" id="streak-toast"></div>
 
+<!-- ── HOST LOBBY ── -->
+<div class="lobby-overlay" id="lobby-overlay">
+  <div class="lobby-card">
+    <div class="lobby-title">🎮 Game Lobby</div>
+    <div class="lobby-code" id="lobby-code-display"></div>
+    <div class="lobby-code-hint">Share this code — players open the game URL and enter it</div>
+    <div class="lobby-players-label">Connected Players <span id="lobby-count" style="color:var(--neon)">0</span></div>
+    <div class="lobby-players-grid" id="lobby-players-grid">
+      <span class="lobby-empty">Waiting for players to join…</span>
+    </div>
+    <button class="lobby-start-btn" onclick="startGameFromLobby()">▶ Start Game</button>
+    <button class="lobby-cancel-btn" onclick="cancelLobby()">Cancel Room</button>
+  </div>
+</div>
+
+<!-- ── GUEST WAITING ROOM ── -->
+<div class="guest-waiting" id="guest-waiting">
+  <div class="gw-logo">🎵 SAMPLE THIS!</div>
+  <div style="font-size:.85rem;color:#666;margin-bottom:.25rem">Room</div>
+  <div class="gw-code" id="gw-code-display"></div>
+  <div class="gw-status" id="gw-status-text">✅ Connected — waiting for host to start…</div>
+  <div class="gw-spinner" id="gw-spinner"><div class="gw-dot"></div><div class="gw-dot"></div><div class="gw-dot"></div></div>
+  <div class="gw-players-label">In this room</div>
+  <div class="gw-players-list" id="gw-players-list"></div>
+  <button class="gw-leave-btn" onclick="leaveRoom()">Leave Room</button>
+</div>
+
+<!-- ── PAUSE OVERLAY (shown on ALL devices when host pauses) ── -->
+<div class="pause-overlay" id="pause-overlay">
+  <div class="pause-icon">⏸</div>
+  <div class="pause-title">Game Paused</div>
+  <div class="pause-sub" id="pause-sub">Waiting for the host to resume…</div>
+  <button class="pause-resume-btn" id="pause-resume-btn" onclick="resumeGame()" style="display:none">▶ Resume Game</button>
+</div>
+
 <!-- ══ SETUP ══ -->
 <div id="setup" class="screen active">
   <div class="logo">
@@ -565,7 +575,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(8,6,18,.8);z-inde
         </div>
         <div class="mp-embed" id="mp-embed">
           <button class="mp-embed-clear" onclick="clearEmbed()">✕</button>
-          <iframe id="mp-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          <iframe id="mp-iframe" src="about:blank" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         </div>
       </div>
     </div>
@@ -1418,7 +1428,7 @@ const QUESTIONS = [
     q:'Hall & Oates\' joyful 1981 hit "You Make My Dreams" got a huge second life in 2009 when its use in which romantic comedy\'s famous "dance on the street" scene went viral?',
     hint:'🎬 The sequence uses the song during a scene where the lead character\'s euphoria transforms his city street into a spontaneous musical number.',
     fact:'"You Make My Dreams" became a streaming phenomenon after its use in 500 Days of Summer (2009). Monthly streams jumped 400% after the scene went viral, introducing the song to a generation born after it was released.',
-    opts:['500 Days of Summer','(500) Days of Summer','Hitch','Something\'s Gotta Give'],ans:0,diff:'medium',cat:'yacht-rock'
+    opts:['(500) Days of Summer','Crazy, Stupid, Love','Hitch','Something\'s Gotta Give'],ans:0,diff:'medium',cat:'yacht-rock'
   },
 
   // --- Additional Classical ---
@@ -1764,7 +1774,9 @@ function embedYT(url) {
   document.getElementById('mp-iframe').src=`https://www.youtube.com/embed/${m[1]}?autoplay=1&rel=0`;
   document.getElementById('mp-embed').style.display='block';
 }
-function clearEmbed() { document.getElementById('mp-embed').style.display='none'; document.getElementById('mp-iframe').src=''; }
+// src='' resolves to the page URL, which reloads the whole game inside the hidden
+// iframe on every question. about:blank is the only safe way to empty it.
+function clearEmbed() { document.getElementById('mp-embed').style.display='none'; document.getElementById('mp-iframe').src='about:blank'; }
 
 // ════════════════════════════════════════
 // GAME STATE
@@ -1814,20 +1826,35 @@ function initSetup() {
   updateBurst();
 }
 function renderTeams(teams) { const c=document.getElementById('team-inputs'); c.innerHTML=''; teams.forEach((t,i)=>addTeamRow(t.name,i)); }
+const MAX_TEAMS = 15;
 function addTeamRow(name, i) {
   const c=document.getElementById('team-inputs');
   const rows=c.querySelectorAll('.team-row');
+  if (rows.length>=MAX_TEAMS) return false;   // hard cap — colours/band names only go to 15
   const idx=(i!==undefined)?i:rows.length;
-  if (rows.length>=15&&i===undefined) return;
   const band=BANDS[idx%BANDS.length];
   const defaultName=(name!==undefined&&name!=='')?name:band.name;
   const d=document.createElement('div'); d.className='team-row';
   d.innerHTML=`<div class="team-badge tc${idx%15}" title="${band.name}">${band.icon}</div><input type="text" placeholder="${band.name}" value="${defaultName}" maxlength="24"><button class="rm-btn" onclick="removeTeamRow(this)" title="Remove">✕</button>`;
   c.appendChild(d);
+  updateAddBtn();
+  return true;
+}
+// Grey out "+ Add Team" once the 15-team cap is reached
+function updateAddBtn() {
+  const btn=document.getElementById('add-btn');
+  if (!btn) return;
+  const n=document.querySelectorAll('.team-row').length;
+  const full=n>=MAX_TEAMS;
+  btn.disabled=full;
+  btn.style.opacity=full?'.45':'';
+  btn.style.cursor=full?'not-allowed':'';
+  btn.textContent=full?`+ Add Team (max ${MAX_TEAMS})`:'+ Add Team';
 }
 function removeTeamRow(btn) {
   if (document.querySelectorAll('.team-row').length<=2) return;
   btn.closest('.team-row').remove();
+  updateAddBtn();
   document.querySelectorAll('.team-row').forEach((r,i)=>{
     const band=BANDS[i%BANDS.length];
     const badge=r.querySelector('.team-badge');
@@ -1839,7 +1866,6 @@ document.getElementById('add-btn').addEventListener('click',()=>{ const rows=doc
 
 function startGame() {
   unlockAudio(); // must run inside click handler BEFORE any async work
-  document.getElementById('mp-pause-btn').style.display = 'inline-block';
   GAME_PAUSED = false;
   const rows=document.querySelectorAll('.team-row');
   const teams=[];
@@ -1861,9 +1887,15 @@ function startGame() {
   const diff = document.querySelector('.diff-btn.active')?.dataset?.diff || 'all';
   if (diff==='easy') qs=qs.filter(q=>q.diff==='easy');
   else if (diff==='hard') qs=qs.filter(q=>q.diff!=='easy');
+  // Nothing matched the category + difficulty combination — bail out before we crash on an empty deck
+  if (qs.length===0) {
+    alert('No questions match that Question Set + Difficulty combination.\n\nTry "All Questions" or a different difficulty.');
+    return;
+  }
   qs.sort(()=>Math.random()-.5);                       // random question order each game
   const rounds=parseInt(document.getElementById('s-rounds').value);
   if (rounds>0) qs=qs.slice(0,Math.min(rounds,qs.length));
+  document.getElementById('mp-pause-btn').style.display = 'inline-block';
 
   // Deep-copy each question and randomise where the correct answer sits (A/B/C/D)
   // so the right answer is never always the same letter
@@ -1878,7 +1910,7 @@ function startGame() {
     return copy;
   });
 
-  G={teams,qs,idx:0,timerSec,pts,speedOn,timerLeft:timerSec,interval:null,running:false,revealed:false,awarded:new Set(),history:[],chartData:[]};
+  G={teams,qs,idx:0,timerSec,pts,speedOn,timerLeft:timerSec,interval:null,running:false,revealed:false,awarded:new Set(),awardLog:{},history:[],chartData:[]};
   showScreen('game'); loadQ(); renderSB(); SFX.gameStart();
 }
 
@@ -1887,7 +1919,7 @@ function startGame() {
 // ════════════════════════════════════════
 function loadQ() {
   const q=G.qs[G.idx];
-  G.revealed=false; G.awarded=new Set();
+  G.revealed=false; G.awarded=new Set(); G.awardLog={};
 
   // Header counters
   const total=G.qs.length, curr=G.idx+1, remain=total-curr;
@@ -1996,25 +2028,34 @@ function showOverlay() {
 }
 
 function awardPts(i) {
+  const t = G.teams[i];
   if (G.awarded.has(i)) {
-    G.teams[i].score-=G.revealPts; G.teams[i].correct--;
-    pushState();
-    G.teams[i].streak=0;
+    // ── UNDO — reverse exactly what was given, including any streak bonus ──
+    const rec = G.awardLog[i] || { pts:G.revealPts, bonus:0, prevStreak:Math.max(0,t.streak-1), prevMaxStreak:t.maxStreak };
+    t.score  -= rec.pts + rec.bonus;
+    t.bonus  -= rec.bonus;
+    t.correct--;
+    t.streak      = rec.prevStreak;      // restore the streak they had before this award
+    t.maxStreak   = rec.prevMaxStreak;
+    delete G.awardLog[i];
     G.awarded.delete(i);
     document.getElementById(`ab${i}`).classList.remove('given');
+    pushState();
   } else {
-    G.teams[i].score+=G.revealPts; G.teams[i].correct++;
-    G.teams[i].streak++;
-    G.teams[i].maxStreak=Math.max(G.teams[i].maxStreak,G.teams[i].streak);
-    // Streak bonus: 3+ in a row = +50% of base pts
-    if (G.teams[i].streak>=3) {
-      const bonus=Math.round(G.revealPts*.5);
-      G.teams[i].score+=bonus; G.teams[i].bonus+=bonus;
-      showStreakToast(G.teams[i].name,G.teams[i].streak,bonus);
+    const rec = { pts:G.revealPts, bonus:0, prevStreak:t.streak, prevMaxStreak:t.maxStreak };
+    t.score += rec.pts; t.correct++;
+    t.streak++;
+    t.maxStreak = Math.max(t.maxStreak, t.streak);
+    // Streak bonus: 3+ in a row = +50% of the points awarded this round
+    if (t.streak>=3) {
+      rec.bonus = Math.round(G.revealPts*.5);
+      t.score += rec.bonus; t.bonus += rec.bonus;
+      showStreakToast(t.name,t.streak,rec.bonus);
       SFX.streakDing();
     } else {
       SFX.pointsDing();
     }
+    G.awardLog[i] = rec;
     G.awarded.add(i);
     document.getElementById(`ab${i}`).classList.add('given');
     pushState();
@@ -2057,6 +2098,8 @@ function renderSB() {
 // TIMER
 // ════════════════════════════════════════
 function startTimer() {
+  clearInterval(G.interval);            // never stack two intervals on one countdown
+  if (G.timerLeft<=0 || G.revealed) return;
   G.running=true; document.getElementById('pause-btn').textContent='⏸';
   G.interval=setInterval(()=>{
     if (!G.running) return;
@@ -2066,16 +2109,8 @@ function startTimer() {
     else SFX.tick();
   },1000);
 }
-function stopTimer() { clearInterval(G.interval); G.running=false; document.getElementById('pause-btn').textContent='▶'; }
-function toggleTimer() {
-  if (G.running){stopTimer();return;}
-  G.running=true; document.getElementById('pause-btn').textContent='⏸';
-  G.interval=setInterval(()=>{
-    if(!G.running)return; G.timerLeft--; updateBar();
-    if(G.timerLeft<=0){stopTimer();if(!G.revealed){SFX.buzzer();revealAnswer();}}
-    else if(G.timerLeft<=10)SFX.urgentTick(); else SFX.tick();
-  },1000);
-}
+function stopTimer() { clearInterval(G.interval); G.interval=null; G.running=false; document.getElementById('pause-btn').textContent='▶'; }
+function toggleTimer() { if (G.running) stopTimer(); else startTimer(); }
 function updateBar() {
   const sec=G.effectiveTimerSec||G.timerSec||30;
   const pct=Math.max(0,(G.timerLeft/sec)*100);
@@ -2101,6 +2136,12 @@ function getRoundMultiplier(idx, total) {
 function endGame() {
   stopTimer(); stopAudio();
   document.getElementById('overlay').classList.remove('visible');
+  document.getElementById('mp-pause-btn').style.display = 'none';
+  // Reset the winner banner so a second game doesn't flash the previous winner
+  const rb = document.getElementById('res-winner-banner');
+  rb.classList.remove('show'); rb.textContent = '';
+  // Tell any connected guests the game is over
+  if (DB && ROOM && IS_HOST) DB.ref(`rooms/${ROOM}/status`).set('ended');
   const finalSnap = G.teams.map(t => t.score);
   const prev = G.chartData[G.chartData.length - 1];
   if (!prev || finalSnap.some((s,i) => s !== prev[i])) G.chartData.push(finalSnap);
@@ -2204,9 +2245,18 @@ function launchConfetti(winnerColor) {
 // ════════════════════════════════════════
 // SCORE CHART
 // ════════════════════════════════════════
-let _chart = null;
+let _chart = null, _chartTries = 0;
 function renderChart() {
-  if (!window.Chart) { setTimeout(renderChart, 300); return; } // CDN still loading
+  if (!window.Chart) {                                   // CDN still loading — retry for ~6s, then give up
+    if (++_chartTries > 20) {
+      const t = document.querySelector('.chart-title');
+      if (t) t.textContent = '📈 Points by Round — chart unavailable offline';
+      return;
+    }
+    setTimeout(renderChart, 300);
+    return;
+  }
+  _chartTries = 0;
   if (!G.chartData || G.chartData.length === 0) return;
   const canvas = document.getElementById('score-chart');
   if (!canvas) return;
@@ -2259,8 +2309,14 @@ function renderChart() {
 let TB = {};
 
 function startTiebreaker() {
-  // Pick 3 random questions from those played
-  const pool=[...G.qs].sort(()=>Math.random()-.5).slice(0,Math.min(3,G.qs.length));
+  // Pick 3 random questions from those played. A handful of entries use the "original"
+  // slot for a film/agency rather than an older record — those make nonsense year
+  // questions, so prefer real originals and only fall back if there aren't enough.
+  const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+  const isReal=q=>q.original&&q.modern&&q.original.year<q.modern.year;
+  // Real originals first; only top up from the rest if the deck was too short
+  const src=[...shuffle(G.qs.filter(isReal)), ...shuffle(G.qs.filter(q=>!isReal(q)))];
+  const pool=src.slice(0,Math.min(3,src.length));
   TB = { qs: pool, idx: 0, scores: G.teams.map(t=>({name:t.name,color:t.color,pts:0})) };
   showScreen('tiebreaker');
   loadTBQuestion();
@@ -2268,6 +2324,7 @@ function startTiebreaker() {
 
 function loadTBQuestion() {
   const q=TB.qs[TB.idx];
+  TB.scoredThisRound = false;
   document.getElementById('tb-q-num').textContent=`Round ${TB.idx+1} of ${TB.qs.length}`;
   document.getElementById('tb-question').textContent=`In what year was "${q.original.title}" by ${q.original.artist} released?`;
   document.getElementById('tb-artist').textContent=`(Sampled in "${q.modern.title}" by ${q.modern.artist})`;
@@ -2292,25 +2349,35 @@ function tbReveal() {
       <div class="tb-score-pts" id="tb-pts-${i}">${s.pts} pts</div>
     </div>`).join('');
   // Award button
-  document.getElementById('tb-scores').insertAdjacentHTML('beforeend',`<button onclick="awardTB()" style="margin-top:.75rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border:none;border-radius:8px;padding:.6rem 1.5rem;font-weight:700;cursor:pointer;width:100%">📊 Score Guesses</button>`);
+  document.getElementById('tb-scores').insertAdjacentHTML('beforeend',`<button id="tb-award-btn" onclick="awardTB()" style="margin-top:.75rem;background:linear-gradient(135deg,var(--neon),#4cc9f0);color:#000;border:none;border-radius:8px;padding:.6rem 1.5rem;font-weight:700;cursor:pointer;width:100%">📊 Score Guesses</button>`);
   document.getElementById('tb-next-btn').style.display='block';
 }
 
 function awardTB() {
+  if (TB.scoredThisRound) return;          // one scoring pass per round — clicking again must not re-award
   const q=TB.qs[TB.idx];
   const actual=q.original.year;
+  // A blank box is "no guess", not a guess of year 0
   const diffs=TB.scores.map((s,i)=>{
-    const val=parseInt(document.getElementById(`tb-guess-${i}`).value)||0;
-    return {i, diff:Math.abs(val-actual), val};
+    const raw=(document.getElementById(`tb-guess-${i}`).value||'').trim();
+    const val=raw===''?null:parseInt(raw,10);
+    const valid=val!==null&&!isNaN(val);
+    return {i, valid, diff:valid?Math.abs(val-actual):Infinity};
   });
-  const minDiff=Math.min(...diffs.map(d=>d.diff));
-  diffs.forEach(({i,diff,val})=>{
+  const guessed=diffs.filter(d=>d.valid);
+  if (guessed.length===0) { alert('Enter at least one year guess first.'); return; }
+  const minDiff=Math.min(...guessed.map(d=>d.diff));
+  diffs.forEach(({i,valid,diff})=>{
     const el=document.getElementById(`tb-result-${i}`);
-    if (diff===0) { el.textContent='🎯 EXACT!'; TB.scores[i].pts+=3; }
-    else if (diff===minDiff) { el.textContent=`±${diff}yr 🥇`; TB.scores[i].pts+=1; }
-    else { el.textContent=`±${diff}yr`; }
+    if (!valid)             { el.textContent='— no guess'; }
+    else if (diff===0)      { el.textContent='🎯 EXACT!';    TB.scores[i].pts+=3; }
+    else if (diff===minDiff){ el.textContent=`±${diff}yr 🥇`; TB.scores[i].pts+=1; }
+    else                    { el.textContent=`±${diff}yr`; }
     document.getElementById(`tb-pts-${i}`).textContent=TB.scores[i].pts+' pts';
   });
+  TB.scoredThisRound = true;
+  const btn=document.getElementById('tb-award-btn');
+  if (btn) { btn.disabled=true; btn.textContent='✔ Scored'; btn.style.opacity='.5'; btn.style.cursor='not-allowed'; }
 }
 
 function tbNext() {
@@ -2372,8 +2439,24 @@ const FB_CONFIG = {
   appId:             "1:27891426606:web:81594aa057262dee8e06bf"
 };
 
-firebase.initializeApp(FB_CONFIG);
-const DB = firebase.database();
+// Firebase is OPTIONAL. If the CDN is blocked (offline, corporate firewall, kiosk wifi)
+// the local game must still start — so this init can never throw past this point.
+let DB = null;
+try {
+  if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+    firebase.initializeApp(FB_CONFIG);
+    DB = firebase.database();
+  }
+} catch (e) { DB = null; }
+
+if (!DB) {
+  // Hide the online-room panel rather than leaving dead buttons on screen
+  const sec = document.getElementById('online-section');
+  if (sec) sec.innerHTML =
+    '<h3 style="color:#777;font-size:1rem;margin-bottom:.4rem">🌐 Live Online Room</h3>' +
+    '<p style="font-size:.82rem;color:#666">Unavailable — no connection to the multiplayer service. ' +
+    'Local pass-and-play works normally.</p>';
+}
 
 const ROOM_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function genCode(n=5){ return Array.from({length:n},()=>ROOM_CHARS[Math.floor(Math.random()*ROOM_CHARS.length)]).join(''); }
@@ -2382,7 +2465,7 @@ let ROOM = null, IS_HOST = false;
 // Sync game state to all connected devices
 // ── PUSH GAME STATE TO ALL DEVICES ──────────────────────
 function pushState() {
-  if (!ROOM || !IS_HOST) return;
+  if (!DB || !ROOM || !IS_HOST) return;
   DB.ref(`rooms/${ROOM}/state`).set({
     idx:       G.idx,
     revealed:  G.revealed,
@@ -2394,6 +2477,7 @@ function pushState() {
 
 // ── HOST: CREATE ROOM + OPEN LOBBY ───────────────────────
 async function createOnlineRoom() {
+  if (!DB) { alert('Online rooms are unavailable — no connection to the multiplayer service.'); return; }
   const code = genCode();
   ROOM = code; IS_HOST = true;
   await DB.ref(`rooms/${code}`).set({ status:'lobby', created:Date.now() });
@@ -2425,7 +2509,10 @@ async function createOnlineRoom() {
 }
 
 function cancelLobby() {
-  if (ROOM) DB.ref(`rooms/${ROOM}`).remove();
+  if (DB && ROOM) {
+    detachRoomListeners(ROOM);
+    DB.ref(`rooms/${ROOM}`).remove();
+  }
   ROOM = null; IS_HOST = false;
   document.getElementById('lobby-overlay').classList.remove('open');
   document.getElementById('room-created-msg').style.display = 'none';
@@ -2439,14 +2526,22 @@ function startGameFromLobby() {
   startGame(); // start the game on the host's device
   // Notify guests after G is initialised (short delay)
   setTimeout(() => {
-    if (DB && ROOM) DB.ref(`rooms/${ROOM}/status`).set('playing');
+    if (DB && ROOM) { DB.ref(`rooms/${ROOM}/status`).set('playing'); pushState(); }
   }, 300);
 }
 
 // ── GUEST: JOIN ROOM + WAIT FOR START ────────────────────
 let GUEST_PLAYER_REF = null;
 
+// `.off()` on a parent ref does NOT detach listeners registered on child paths,
+// so every path we subscribe to has to be released explicitly.
+function detachRoomListeners(code) {
+  if (!DB || !code) return;
+  ['', '/players', '/state', '/status'].forEach(p => DB.ref(`rooms/${code}${p}`).off());
+}
+
 async function joinOnlineRoom() {
+  if (!DB) { alert('Online rooms are unavailable — no connection to the multiplayer service.'); return; }
   const code = (document.getElementById('join-code-in').value||'').trim().toUpperCase();
   if (!code) return;
   const snap = await DB.ref(`rooms/${code}`).once('value');
@@ -2501,8 +2596,8 @@ async function joinOnlineRoom() {
 }
 
 function leaveRoom() {
-  if (GUEST_PLAYER_REF) GUEST_PLAYER_REF.remove();
-  if (ROOM) DB.ref(`rooms/${ROOM}`).off();
+  if (GUEST_PLAYER_REF) { GUEST_PLAYER_REF.remove(); GUEST_PLAYER_REF = null; }
+  detachRoomListeners(ROOM);
   ROOM = null;
   document.getElementById('guest-waiting').classList.remove('open');
   document.getElementById('join-code-in').value = '';
@@ -2512,6 +2607,7 @@ function leaveRoom() {
 
 // ── SCOREBOARD SYNC (guests) ─────────────────────────────
 function subscribeGuest(code) {
+  if (!DB) return;
   DB.ref(`rooms/${code}/state`).on('value', snap => {
     const s = snap.val();
     if (!s) return;
@@ -2546,9 +2642,11 @@ function togglePause() {
 
 function pauseGame() {
   GAME_PAUSED = true;
+  // Remember whether the countdown was actually running, so Resume can restore it
+  G.wasRunning = !!G.running;
   stopTimer();
   stopAudio();
-  if (ROOM && IS_HOST) DB.ref(`rooms/${ROOM}/status`).set('paused');
+  if (ROOM && IS_HOST && DB) DB.ref(`rooms/${ROOM}/status`).set('paused');
   showPauseOverlay(true); // host sees resume button
   const btn = document.getElementById('mp-pause-btn');
   if (btn) { btn.textContent = '▶ Resume'; btn.classList.add('paused'); }
@@ -2557,9 +2655,12 @@ function pauseGame() {
 function resumeGame() {
   GAME_PAUSED = false;
   hidePauseOverlay();
-  if (ROOM && IS_HOST) DB.ref(`rooms/${ROOM}/status`).set('playing');
+  if (ROOM && IS_HOST && DB) DB.ref(`rooms/${ROOM}/status`).set('playing');
   const btn = document.getElementById('mp-pause-btn');
   if (btn) { btn.textContent = '⏸ Pause'; btn.classList.remove('paused'); }
+  // Restart the countdown if it was ticking when we paused
+  if (G.wasRunning && !G.revealed && G.timerLeft > 0) startTimer();
+  G.wasRunning = false;
   // Resume audio preview if there was one
   if (AP.audio.src && AP.audio.src !== SILENT) {
     AP.audio.play().catch(()=>{});
