@@ -3,7 +3,9 @@ Thumbs.db
 *.log
 node_modules/
 
-# Local Netlify folder
-.netlify
-# Track Netlify site link but not build cache
+# Local Netlify build cache — but keep the site link.
+# Must be ".netlify/*", not ".netlify": git cannot re-include a file whose parent
+# directory is excluded, so the negation below is silently dead with the bare form.
+# Losing state.json relinks the project to a different Netlify site.
+.netlify/*
 !.netlify/state.json
