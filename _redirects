@@ -1,0 +1,8 @@
+# Netlify publishes this whole folder, so anything sitting next to index.html is public.
+# The game is index.html; everything else is repo housekeeping. Bounce it to the game.
+/NOTES.md               /  301
+/README.md              /  301
+/validate-questions.js  /  301
+/database.rules.json    /  301
+/firebase.json          /  301
+/scripts/*              /  301
