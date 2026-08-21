@@ -44,13 +44,13 @@ Expect it to flag exactly six reversed-year entries — those are known and expl
 
 ## If the machine is gone
 
-Restore from `_RESET-BACKUP-2026-08-20/bundles/sample-this-trivia.bundle` in OneDrive:
+Everything is on GitHub — both branches, full history:
 
-    git clone sample-this-trivia.bundle sample-this-trivia
+    git clone https://github.com/dcleveland65/sample-this-trivia.git
 
-**Clone the bundle, not a branch** — other repos in that backup keep work on
-`backup/*-pre-scrub` tags that a branch clone would silently drop. As of 2026-08-20 every
-repo also reads truly-unpushed = 0, so GitHub is a valid source too.
+`master` is the game. `game-night` is the same thing plus these docs and the validator.
+`.netlify/state.json` is committed, so `netlify deploy --prod --dir .` goes to the right
+site straight out of a fresh clone with no linking step.
 
 ---
 
